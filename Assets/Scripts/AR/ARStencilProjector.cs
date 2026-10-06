@@ -28,3 +28,18 @@ namespace ARStencilMapper.AR
                 else if (stencilMaterial.HasProperty("_MainTex"))
                     stencilMaterial.SetTexture("_MainTex", newTexture);
             }
+            else
+            {
+                Debug.LogWarning("Stencil Material is not assigned in the AR Projector.");
+            }
+        }
+
+        void Awake()
+        {
+            arRaycastManager = GetComponent<ARRaycastManager>();
+        }
+
+        void Update()
+        {
+            if (Input.touchCount > 0)
+            {
