@@ -30,3 +30,11 @@ namespace ARStencilMapper.Mannequin
                 float muscleValue = Mathf.Clamp(muscleMass * 0.5f, 0, 100);
 
                 if (skinnedMesh.sharedMesh.blendShapeCount > weightBlendshapeIndex) skinnedMesh.SetBlendShapeWeight(weightBlendshapeIndex, weightValue);
+                if (skinnedMesh.sharedMesh.blendShapeCount > heightBlendshapeIndex) skinnedMesh.SetBlendShapeWeight(heightBlendshapeIndex, heightValue);
+                if (skinnedMesh.sharedMesh.blendShapeCount > muscleBlendshapeIndex) skinnedMesh.SetBlendShapeWeight(muscleBlendshapeIndex, muscleValue);
+            }
+            else
+            {
+                // FALLBACK PARA MODELOS ESTÁTICOS (Sin esqueleto / T-Pose)
+                // Usamos la escala local (Transform.localScale)
+                // Altura base: 170cm = escala 1 en Y
