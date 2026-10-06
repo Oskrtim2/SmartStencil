@@ -13,3 +13,8 @@ namespace ARStencilMapper.Mannequin
         {
             if (mannequinMesh == null || mannequinMesh.materials.Length <= materialIndex)
             {
+                Debug.LogWarning("Mannequin Mesh or Material is not correctly assigned.");
+                return;
+            }
+
+            // Update the material color
