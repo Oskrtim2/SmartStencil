@@ -19,3 +19,10 @@ namespace ARStencilMapper.Core
             age = newAge;
             gender = newGender;
 
+            // In a real scenario, this would save to PlayerPrefs, a local database, or a JSON file
+            PlayerPrefs.SetFloat("UserWeight", weight);
+            PlayerPrefs.SetFloat("UserHeight", height);
+            PlayerPrefs.SetFloat("UserMuscle", muscleMass);
+            PlayerPrefs.SetInt("UserAge", age);
+            PlayerPrefs.SetString("UserGender", gender);
+            PlayerPrefs.Save();
