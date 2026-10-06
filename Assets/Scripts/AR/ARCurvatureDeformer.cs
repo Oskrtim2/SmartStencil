@@ -63,3 +63,18 @@ namespace ARStencilMapper.AR
 
                 // Aplicar compensación
                 newVertices[i] = new Vector3(newX, v.y, newZ);
+            }
+
+            deformedMesh.vertices = newVertices;
+            deformedMesh.RecalculateNormals();
+            deformedMesh.RecalculateBounds();
+        }
+
+        public void UpdateCurvature(float radius, float tension)
+        {
+            curvatureRadius = radius;
+            muscleTension = tension;
+            ApplyDeformation();
+        }
+    }
+}
