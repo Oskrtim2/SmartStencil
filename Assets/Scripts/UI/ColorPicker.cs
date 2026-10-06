@@ -42,3 +42,14 @@ namespace ARStencilMapper.UI
             {
                 // Normalize coordinates (0 to 1) based on the image size
                 float normalizedX = (localPoint.x - rectTransform.rect.x) / rectTransform.rect.width;
+                float normalizedY = (localPoint.y - rectTransform.rect.y) / rectTransform.rect.height;
+
+                Texture2D texture = colorWheel.texture as Texture2D;
+                if (texture != null)
+                {
+                    // Clamp to ensure we don't go out of bounds
+                    normalizedX = Mathf.Clamp01(normalizedX);
+                    normalizedY = Mathf.Clamp01(normalizedY);
+
+                    int texX = Mathf.RoundToInt(normalizedX * texture.width);
+                    int texY = Mathf.RoundToInt(normalizedY * texture.height);
