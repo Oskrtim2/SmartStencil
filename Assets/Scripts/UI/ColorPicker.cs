@@ -9,3 +9,14 @@ namespace ARStencilMapper.UI
     {
         [Header("UI Elements")]
         public RawImage colorWheel;
+        
+        [Header("References")]
+        public SkinColorModifier skinModifier;
+        
+        private RectTransform rectTransform;
+
+        void Awake()
+        {
+            if (colorWheel != null)
+            {
+                rectTransform = colorWheel.GetComponent<RectTransform>();
