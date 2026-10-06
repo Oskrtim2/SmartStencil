@@ -68,3 +68,20 @@ namespace ARStencilMapper.UI
             UpdateMannequin();
         }
 
+        public void UpdateMannequin()
+        {
+            if (mannequinController != null)
+            {
+                mannequinController.UpdateMorph(weightSlider.value, heightSlider.value, muscleSlider.value);
+            }
+        }
+
+        public void SaveDataBtn()
+        {
+            if (userDataManager != null)
+            {
+                userDataManager.SaveUserData(weightSlider.value, heightSlider.value, muscleSlider.value, 25, "Neutral");
+            }
+        }
+    }
+}
