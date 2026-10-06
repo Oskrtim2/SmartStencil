@@ -24,3 +24,16 @@ namespace ARStencilMapper.AR
             {
                 // Clone the mesh so we don't permanently modify the prefab's mesh
                 originalMesh = meshFilter.sharedMesh;
+                deformedMesh = Instantiate(originalMesh);
+                meshFilter.mesh = deformedMesh;
+            }
+        }
+
+        void Start()
+        {
+            ApplyDeformation();
+        }
+
+        public void ApplyDeformation()
+        {
+            if (originalMesh == null || deformedMesh == null) return;
