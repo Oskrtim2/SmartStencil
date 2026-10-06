@@ -18,3 +18,8 @@ namespace ARStencilMapper.Mannequin
             }
 
             // Update the material color
+            Material skinMaterial = mannequinMesh.materials[materialIndex];
+            if (skinMaterial.HasProperty(colorPropertyName))
+            {
+                skinMaterial.SetColor(colorPropertyName, newColor);
+            }
