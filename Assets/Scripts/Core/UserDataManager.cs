@@ -12,3 +12,10 @@ namespace ARStencilMapper.Core
         public string gender = "Neutral";
 
         public void SaveUserData(float newWeight, float newHeight, float newMuscle, int newAge, string newGender)
+        {
+            weight = newWeight;
+            height = newHeight;
+            muscleMass = newMuscle;
+            age = newAge;
+            gender = newGender;
+
