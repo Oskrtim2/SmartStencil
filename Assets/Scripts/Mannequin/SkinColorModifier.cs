@@ -23,3 +23,10 @@ namespace ARStencilMapper.Mannequin
             {
                 skinMaterial.SetColor(colorPropertyName, newColor);
             }
+            else
+            {
+                Debug.LogWarning($"Property {colorPropertyName} not found on the material.");
+            }
+        }
+    }
+}
