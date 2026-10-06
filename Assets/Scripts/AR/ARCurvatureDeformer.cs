@@ -50,3 +50,16 @@ namespace ARStencilMapper.AR
                 // Suponemos que el stencil es plano en X-Y y envuelve un cilindro en el eje Y.
                 // La distancia 'x' original determina el ángulo de envoltura.
                 float angle = v.x / safeRadius;
+                
+                // Mapeo cilíndrico
+                float newX = Mathf.Sin(angle) * safeRadius;
+                float newZ = safeRadius - (Mathf.Cos(angle) * safeRadius);
+
+                // Simulador de Tensión Muscular (Abultamiento vertical)
+                // Utilizamos una curva parabólica leve basada en el eje Y local
+                float verticalFactor = 1.0f - Mathf.Clamp01(Mathf.Pow(v.y * 10f, 2)); // Asumiendo un tamaño de malla razonable
+                float bulge = verticalFactor * muscleTension * 0.02f; // Max 2cm de abultamiento muscular
+                newZ -= bulge;
+
+                // Aplicar compensación
+                newVertices[i] = new Vector3(newX, v.y, newZ);
