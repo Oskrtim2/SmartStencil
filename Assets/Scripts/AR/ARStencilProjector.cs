@@ -43,3 +43,18 @@ namespace ARStencilMapper.AR
         {
             if (Input.touchCount > 0)
             {
+                Touch touch = Input.GetTouch(0);
+
+                if (touch.phase == TouchPhase.Began)
+                {
+                    // Perform a raycast against AR planes and point clouds
+                    if (arRaycastManager.Raycast(touch.position, hits, TrackableType.PlaneWithinPolygon | TrackableType.FeaturePoint))
+                    {
+                        Pose hitPose = hits[0].pose;
+
+                        if (spawnedStencil == null)
+                        {
+                            spawnedStencil = Instantiate(stencilPrefab, hitPose.position, hitPose.rotation);
+                        }
+                        else
+                        {
