@@ -33,3 +33,10 @@ namespace ARStencilMapper.Core
         public void LoadUserData()
         {
             weight = PlayerPrefs.GetFloat("UserWeight", 70f);
+            height = PlayerPrefs.GetFloat("UserHeight", 170f);
+            muscleMass = PlayerPrefs.GetFloat("UserMuscle", 50f);
+            age = PlayerPrefs.GetInt("UserAge", 25);
+            gender = PlayerPrefs.GetString("UserGender", "Neutral");
+        }
+    }
+}
