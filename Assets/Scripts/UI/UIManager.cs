@@ -26,3 +26,17 @@ namespace ARStencilMapper.UI
         public Texture2D[] tattooDesigns;
 
         public void SelectTattooDesign(int index)
+        {
+            if (arProjector != null && tattooDesigns != null && index >= 0 && index < tattooDesigns.Length)
+            {
+                arProjector.SetStencilTexture(tattooDesigns[index]);
+            }
+        }
+
+        void Start()
+        {
+            // Setup listeners
+            weightSlider.onValueChanged.AddListener(OnWeightChanged);
+            heightSlider.onValueChanged.AddListener(OnHeightChanged);
+            muscleSlider.onValueChanged.AddListener(OnMuscleChanged);
+            
