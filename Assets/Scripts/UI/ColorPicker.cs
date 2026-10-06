@@ -53,3 +53,16 @@ namespace ARStencilMapper.UI
 
                     int texX = Mathf.RoundToInt(normalizedX * texture.width);
                     int texY = Mathf.RoundToInt(normalizedY * texture.height);
+                    
+                    Color sampledColor = texture.GetPixel(texX, texY);
+                    
+                    // Ignore transparent pixels (e.g. outside a color wheel circle)
+                    if (sampledColor.a > 0.1f)
+                    {
+                        skinModifier.SetSkinColor(sampledColor);
+                    }
+                }
+            }
+        }
+    }
+}
