@@ -11,3 +11,16 @@ namespace ARStencilMapper.AR
 
         [Tooltip("Tensión muscular simulada (abultamiento).")]
         [Range(0f, 1f)]
+        public float muscleTension = 0.0f;
+
+        private MeshFilter meshFilter;
+        private Mesh originalMesh;
+        private Mesh deformedMesh;
+
+        void Awake()
+        {
+            meshFilter = GetComponent<MeshFilter>();
+            if (meshFilter != null && meshFilter.sharedMesh != null)
+            {
+                // Clone the mesh so we don't permanently modify the prefab's mesh
+                originalMesh = meshFilter.sharedMesh;
