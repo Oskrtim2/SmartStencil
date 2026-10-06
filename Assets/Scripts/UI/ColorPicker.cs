@@ -20,3 +20,14 @@ namespace ARStencilMapper.UI
             if (colorWheel != null)
             {
                 rectTransform = colorWheel.GetComponent<RectTransform>();
+            }
+        }
+
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            PickColor(eventData);
+        }
+
+        public void OnDrag(PointerEventData eventData)
+        {
+            PickColor(eventData);
