@@ -54,3 +54,17 @@ namespace ARStencilMapper.UI
         {
             if (weightText != null) weightText.text = $"Weight: {value:F1} kg";
             UpdateMannequin();
+        }
+
+        private void OnHeightChanged(float value)
+        {
+            if (heightText != null) heightText.text = $"Height: {value:F1} cm";
+            UpdateMannequin();
+        }
+
+        private void OnMuscleChanged(float value)
+        {
+            if (muscleText != null) muscleText.text = $"Muscle: {value:F1}";
+            UpdateMannequin();
+        }
+
