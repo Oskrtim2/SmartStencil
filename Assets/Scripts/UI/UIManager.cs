@@ -40,3 +40,17 @@ namespace ARStencilMapper.UI
             heightSlider.onValueChanged.AddListener(OnHeightChanged);
             muscleSlider.onValueChanged.AddListener(OnMuscleChanged);
             
+            // Initialize with saved data if needed
+            if (userDataManager != null)
+            {
+                userDataManager.LoadUserData();
+                weightSlider.value = userDataManager.weight;
+                heightSlider.value = userDataManager.height;
+                muscleSlider.value = userDataManager.muscleMass;
+            }
+        }
+
+        private void OnWeightChanged(float value)
+        {
+            if (weightText != null) weightText.text = $"Weight: {value:F1} kg";
+            UpdateMannequin();
