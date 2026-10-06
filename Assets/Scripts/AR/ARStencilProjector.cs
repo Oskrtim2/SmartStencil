@@ -58,3 +58,18 @@ namespace ARStencilMapper.AR
                         }
                         else
                         {
+                            spawnedStencil.transform.position = hitPose.position;
+                            spawnedStencil.transform.rotation = hitPose.rotation;
+                        }
+
+                        // Fase 5: Ajuste del stencil a la curvatura cilíndrica/muscular
+                        AdaptStencilToCurvature(spawnedStencil);
+                    }
+                }
+            }
+        }
+
+        private void AdaptStencilToCurvature(GameObject stencil)
+        {
+            // Busca si el stencil tiene el componente de deformación
+            ARCurvatureDeformer deformer = stencil.GetComponent<ARCurvatureDeformer>();
