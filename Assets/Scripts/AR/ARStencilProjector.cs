@@ -13,3 +13,18 @@ namespace ARStencilMapper.AR
 
         [Header("Projection Settings")]
         public GameObject stencilPrefab;
+        private GameObject spawnedStencil;
+
+        [Header("Tattoo Material Settings")]
+        public Material stencilMaterial; // El material que usa el stencilPrefab
+
+        public void SetStencilTexture(Texture2D newTexture)
+        {
+            if (stencilMaterial != null)
+            {
+                // Soporte para URP ("_BaseMap") o Standard ("_MainTex")
+                if (stencilMaterial.HasProperty("_BaseMap"))
+                    stencilMaterial.SetTexture("_BaseMap", newTexture);
+                else if (stencilMaterial.HasProperty("_MainTex"))
+                    stencilMaterial.SetTexture("_MainTex", newTexture);
+            }
