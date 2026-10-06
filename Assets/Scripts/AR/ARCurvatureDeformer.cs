@@ -37,3 +37,16 @@ namespace ARStencilMapper.AR
         public void ApplyDeformation()
         {
             if (originalMesh == null || deformedMesh == null) return;
+
+            Vector3[] vertices = originalMesh.vertices;
+            Vector3[] newVertices = new Vector3[vertices.Length];
+
+            float safeRadius = Mathf.Max(0.01f, curvatureRadius);
+
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                Vector3 v = vertices[i];
+                
+                // Suponemos que el stencil es plano en X-Y y envuelve un cilindro en el eje Y.
+                // La distancia 'x' original determina el ángulo de envoltura.
+                float angle = v.x / safeRadius;
