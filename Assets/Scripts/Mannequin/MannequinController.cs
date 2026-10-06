@@ -22,3 +22,11 @@ namespace ARStencilMapper.Mannequin
 
             SkinnedMeshRenderer skinnedMesh = mannequinMesh as SkinnedMeshRenderer;
 
+            if (skinnedMesh != null && skinnedMesh.sharedMesh.blendShapeCount > 0)
+            {
+                // Si tiene esqueleto y Blendshapes:
+                float weightValue = Mathf.Clamp(weight * 0.5f, 0, 100); 
+                float heightValue = Mathf.Clamp(height * 0.5f, 0, 100);
+                float muscleValue = Mathf.Clamp(muscleMass * 0.5f, 0, 100);
+
+                if (skinnedMesh.sharedMesh.blendShapeCount > weightBlendshapeIndex) skinnedMesh.SetBlendShapeWeight(weightBlendshapeIndex, weightValue);
