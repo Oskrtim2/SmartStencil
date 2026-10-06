@@ -8,3 +8,8 @@ namespace ARStencilMapper.Mannequin
         public Renderer mannequinMesh;
         public int materialIndex = 0;
         public string colorPropertyName = "_BaseColor"; // Common for URP/HDRP, or "_Color" for Standard
+
+        public void SetSkinColor(Color newColor)
+        {
+            if (mannequinMesh == null || mannequinMesh.materials.Length <= materialIndex)
+            {
