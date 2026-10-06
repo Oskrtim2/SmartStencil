@@ -12,3 +12,17 @@ namespace ARStencilMapper.UI
         public Slider weightSlider;
         public Slider heightSlider;
         public Slider muscleSlider;
+        
+        public TextMeshProUGUI weightText;
+        public TextMeshProUGUI heightText;
+        public TextMeshProUGUI muscleText;
+
+        [Header("References")]
+        public UserDataManager userDataManager;
+        public MannequinController mannequinController;
+        public ARStencilProjector arProjector;
+
+        [Header("Tattoo Designs (Frontend)")]
+        public Texture2D[] tattooDesigns;
+
+        public void SelectTattooDesign(int index)
