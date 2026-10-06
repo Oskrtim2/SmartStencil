@@ -38,3 +38,14 @@ namespace ARStencilMapper.Mannequin
                 // FALLBACK PARA MODELOS ESTÁTICOS (Sin esqueleto / T-Pose)
                 // Usamos la escala local (Transform.localScale)
                 // Altura base: 170cm = escala 1 en Y
+                float scaleY = height / 170f;
+                
+                // Grosor base: 70kg = escala 1 en X y Z. Sumamos masa muscular.
+                float scaleXZ = (weight / 70f) + (muscleMass * 0.005f);
+
+                // Aplicar escala no uniforme
+                mannequinMesh.transform.localScale = new Vector3(scaleXZ, scaleY, scaleXZ);
+            }
+        }
+    }
+}
