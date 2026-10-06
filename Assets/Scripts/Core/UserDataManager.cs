@@ -26,3 +26,10 @@ namespace ARStencilMapper.Core
             PlayerPrefs.SetInt("UserAge", age);
             PlayerPrefs.SetString("UserGender", gender);
             PlayerPrefs.Save();
+            
+            Debug.Log("User data saved successfully.");
+        }
+
+        public void LoadUserData()
+        {
+            weight = PlayerPrefs.GetFloat("UserWeight", 70f);
