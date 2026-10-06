@@ -14,3 +14,11 @@ namespace ARStencilMapper.Mannequin
 
         public void UpdateMorph(float weight, float height, float muscleMass)
         {
+            if (mannequinMesh == null)
+            {
+                Debug.LogWarning("Mannequin Mesh is not assigned.");
+                return;
+            }
+
+            SkinnedMeshRenderer skinnedMesh = mannequinMesh as SkinnedMeshRenderer;
+
