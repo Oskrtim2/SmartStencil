@@ -73,3 +73,18 @@ namespace ARStencilMapper.AR
         {
             // Busca si el stencil tiene el componente de deformación
             ARCurvatureDeformer deformer = stencil.GetComponent<ARCurvatureDeformer>();
+            if (deformer == null)
+            {
+                // Si no lo tiene, se lo agregamos automáticamente
+                deformer = stencil.AddComponent<ARCurvatureDeformer>();
+            }
+
+            // Aquí se pueden aplicar cálculos dinámicos basados en la superficie escaneada.
+            // Por ahora, simulamos que el sistema detecta un radio promedio de brazo (4.5 cm)
+            // y una tensión muscular media.
+            deformer.UpdateCurvature(0.045f, 0.5f);
+            
+            Debug.Log("Stencil adaptado a la curvatura anatómica.");
+        }
+    }
+}
