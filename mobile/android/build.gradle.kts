@@ -6,9 +6,12 @@ allprojects {
 }
 
 val newBuildDir: Directory =
-    rootProject.layout.buildDirectory
-        .dir("../../build")
-        .get()
+    if (rootProject.projectDir.absolutePath.any { it.code > 127 }) {
+        val userHome = System.getProperty("user.home").replace('\\', '/')
+        objects.directoryProperty().fileValue(file("$userHome/build_cache/mobile")).get()
+    } else {
+        rootProject.layout.buildDirectory.dir("../../build").get()
+    }
 rootProject.layout.buildDirectory.value(newBuildDir)
 
 subprojects {
