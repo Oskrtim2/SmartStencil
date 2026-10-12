@@ -112,6 +112,29 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             ),
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: 18),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.auto_awesome_rounded, color: Color(0xFFA78BFA), size: 18),
+            label: const Text(
+              'Modo Demo: Probar Realidad Aumentada Ahora',
+              style: TextStyle(
+                color: Color(0xFFA78BFA),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFF8B5CF6), width: 1.2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              backgroundColor: const Color(0xFF8B5CF6).withOpacity(0.12),
+            ),
+            onPressed: () {
+              Navigator.pushNamed(context, '/ar', arguments: {'isDemo': true});
+            },
+          ),
         ],
       ),
     );

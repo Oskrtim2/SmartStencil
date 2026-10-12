@@ -1,3 +1,7 @@
+import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -76,11 +80,74 @@ class _ArPreviewScreenState extends ConsumerState<ArPreviewScreen>
     if (args is Map<String, dynamic>) {
       final presignedUrl = args['presignedUrl'] as String?;
       if (presignedUrl != null) {
-        final loader = SecureImageLoader();
-        final bytes = await loader.loadFromPresignedUrl(presignedUrl);
-        await _sessionController?.loadTattooFromBytes(bytes);
+        try {
+          final loader = SecureImageLoader();
+          final bytes = await loader.loadFromPresignedUrl(presignedUrl);
+          await _sessionController?.loadTattooFromBytes(bytes);
+          return;
+        } catch (e) {
+          debugPrint('Error loading presigned URL: $e');
+        }
       }
     }
+    // Carga un diseño de demostración automáticamente para pruebas instantáneas
+    final demoBytes = await _generateSampleTattooBytes();
+    await _sessionController?.loadTattooFromBytes(demoBytes);
+  }
+
+  Future<Uint8List> _generateSampleTattooBytes() async {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, 800, 800));
+    const center = Offset(400, 400);
+
+    final stroke = Paint()
+      ..color = const Color(0xFF0F172A)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.5
+      ..isAntiAlias = true;
+
+    final fill = Paint()
+      ..color = const Color(0xFF0F172A)
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+
+    // Rings
+    for (double r = 50; r <= 320; r += 45) {
+      canvas.drawCircle(center, r, stroke);
+    }
+
+    // Sacred geometry petals & mandala stars
+    for (int i = 0; i < 16; i++) {
+      final angle = (i * 2 * math.pi) / 16;
+      final x1 = 400 + math.cos(angle) * 120;
+      final y1 = 400 + math.sin(angle) * 120;
+      final x2 = 400 + math.cos(angle) * 350;
+      final y2 = 400 + math.sin(angle) * 350;
+      canvas.drawLine(Offset(x1, y1), Offset(x2, y2), stroke);
+
+      final petalPath = Path();
+      petalPath.moveTo(400 + math.cos(angle) * 90, 400 + math.sin(angle) * 90);
+      petalPath.quadraticBezierTo(
+        400 + math.cos(angle + 0.15) * 240,
+        400 + math.sin(angle + 0.15) * 240,
+        400 + math.cos(angle) * 330,
+        400 + math.sin(angle) * 330,
+      );
+      petalPath.quadraticBezierTo(
+        400 + math.cos(angle - 0.15) * 240,
+        400 + math.sin(angle - 0.15) * 240,
+        400 + math.cos(angle) * 90,
+        400 + math.sin(angle) * 90,
+      );
+      canvas.drawPath(petalPath, stroke);
+    }
+
+    canvas.drawCircle(center, 20, fill);
+
+    final picture = recorder.endRecording();
+    final img = await picture.toImage(800, 800);
+    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+    return byteData!.buffer.asUint8List();
   }
 
   @override
