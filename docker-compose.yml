@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # ── PostgreSQL Database ─────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: inksight-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: inksight
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: inksight
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inksight -d inksight"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── Local S3 Compatible Storage (MinIO) ─────────────────
+  # Permite almacenar y previsualizar tatuajes localmente sin cuenta de AWS
+  minio:
+    image: minio/minio:latest
+    container_name: inksight-minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadminpassword
+    ports:
+      - "9000:9000" # S3 API
+      - "9001:9001" # Web Console (http://localhost:9001)
+    volumes:
+      - minio_data:/data
+
+  # ── Backend API (NestJS) ────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: inksight-api
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://inksight:password123@postgres:5432/inksight?schema=public
+      JWT_SECRET: super-secret-jwt-key-inksight-2026-production-min32chars
+      JWT_EXPIRATION: 15m
+      JWT_REFRESH_SECRET: super-secret-refresh-key-inksight-2026-production-min32chars
+      JWT_REFRESH_EXPIRATION: 7d
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadminpassword
+      S3_BUCKET_NAME: inksight-designs
+      S3_PRESIGNED_URL_TTL: 300
+      SHARE_TOKEN_DEFAULT_TTL: 86400
+      SHARE_TOKEN_MAX_USES: 10
+
+volumes:
+  postgres_data:
+  minio_data:

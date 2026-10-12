@@ -1,0 +1,76 @@
+# ── Environment & Secrets (NEVER COMMIT) ──
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.p12
+
+# ── Node.js / Backend ──
+**/node_modules/
+**/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ── Flutter / Dart ──
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/build/
+**/coverage/
+*.lock.bak
+
+# ── Android ──
+**/android/.gradle/
+**/android/captures/
+**/android/local.properties
+**/android/**/build/
+**/android/app/build/
+**/*.keystore
+**/*.jks
+
+# ── iOS ──
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/DerivedData/
+**/*.ipa
+**/*.dSYM.zip
+**/*.dSYM
+
+# ── Windows / Desktop Platform Artifacts ──
+**/windows/flutter/ephemeral/
+**/linux/flutter/ephemeral/
+**/macos/Flutter/ephemeral/
+
+# ── IDEs & System Files ──
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+**/desktop.ini
+*.swp
+*.bak
+*~
+
+# ── Explanatory / Scratch Text Artifacts ──
+architecture.md
+project_map.md
+DEPLOYMENT_GUIDE.md
+scratch/

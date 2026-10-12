@@ -1,0 +1,185 @@
+// ─────────────────────────────────────────────────────────
+// InkSight — Prisma Schema
+// ─────────────────────────────────────────────────────────
+// Bounded Contexts:
+//   • Identity: User, ArtistProfile, ClientProfile
+//   • Catalog:  Design, DesignTag
+//   • Sharing:  ShareToken
+// ─────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════════════════════
+// IDENTITY BOUNDED CONTEXT
+// ═══════════════════════════════════════════════════════
+
+enum UserRole {
+  ARTIST
+  CLIENT
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  displayName   String
+  role          UserRole
+  avatarUrl     String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  artistProfile ArtistProfile?
+  clientProfile ClientProfile?
+
+  @@index([email])
+  @@map("users")
+}
+
+model ArtistProfile {
+  id            String    @id @default(uuid())
+  userId        String    @unique
+  studioName    String?
+  bio           String?   @db.Text
+  website       String?
+  instagramHandle String?
+  location      String?
+  isVerified    Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  designs       Design[]
+
+  @@map("artist_profiles")
+}
+
+model ClientProfile {
+  id            String    @id @default(uuid())
+  userId        String    @unique
+  preferredStyles String[] // Array of style tags
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("client_profiles")
+}
+
+// ═══════════════════════════════════════════════════════
+// CATALOG BOUNDED CONTEXT
+// ═══════════════════════════════════════════════════════
+
+enum DesignStyle {
+  FINE_LINE
+  BLACKWORK
+  NEOTRIBAL
+  CYBERSIGILISM
+  TRADITIONAL
+  NEOTRADITIONAL
+  REALISM
+  WATERCOLOR
+  GEOMETRIC
+  DOTWORK
+  MINIMALIST
+  JAPANESE
+  LETTERING
+  OTHER
+}
+
+enum DesignStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Design {
+  id            String        @id @default(uuid())
+  artistId      String
+  title         String
+  description   String?       @db.Text
+  style         DesignStyle
+  status        DesignStatus  @default(DRAFT)
+
+  // Asset metadata (S3 reference)
+  s3Key         String        @unique
+  s3Bucket      String
+  originalFilename String
+  mimeType      String        @default("image/png")
+  fileSizeBytes Int
+  widthPx       Int
+  heightPx      Int
+
+  // Thumbnail (generated server-side, lower resolution)
+  thumbnailS3Key String?
+
+  // Placement hints
+  recommendedBodyParts String[]  // e.g., ["forearm", "calf"]
+  estimatedWidthCm     Float?    // Real-world size hint
+  estimatedHeightCm    Float?
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  artist        ArtistProfile @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  tags          DesignTag[]
+  shareTokens   ShareToken[]
+
+  @@index([artistId])
+  @@index([style])
+  @@index([status])
+  @@map("designs")
+}
+
+model DesignTag {
+  id        String   @id @default(uuid())
+  designId  String
+  tag       String
+
+  // Relations
+  design    Design   @relation(fields: [designId], references: [id], onDelete: Cascade)
+
+  @@unique([designId, tag])
+  @@index([tag])
+  @@map("design_tags")
+}
+
+// ═══════════════════════════════════════════════════════
+// SHARING BOUNDED CONTEXT
+// ═══════════════════════════════════════════════════════
+
+model ShareToken {
+  id          String    @id @default(uuid())
+  designId    String
+  token       String    @unique @default(uuid())
+
+  // Token rules
+  maxUses     Int       @default(1)
+  currentUses Int       @default(0)
+  expiresAt   DateTime
+  isRevoked   Boolean   @default(false)
+
+  // Audit
+  createdAt   DateTime  @default(now())
+  lastUsedAt  DateTime?
+  createdByIp String?
+
+  // Relations
+  design      Design    @relation(fields: [designId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([designId])
+  @@index([expiresAt])
+  @@map("share_tokens")
+}
