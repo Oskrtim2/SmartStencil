@@ -78,6 +78,13 @@ class _ArPreviewScreenState extends ConsumerState<ArPreviewScreen>
   Future<void> _loadDesignFromArgs() async {
     final args = ModalRoute.of(context)?.settings.arguments;
     if (args is Map<String, dynamic>) {
+      // Direct raw bytes passed from AI Studio
+      final tattooBytes = args['tattooBytes'] as Uint8List?;
+      if (tattooBytes != null && tattooBytes.isNotEmpty) {
+        await _sessionController?.loadTattooFromBytes(tattooBytes);
+        return;
+      }
+
       final presignedUrl = args['presignedUrl'] as String?;
       if (presignedUrl != null) {
         try {
