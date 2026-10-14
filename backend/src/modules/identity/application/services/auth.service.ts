@@ -53,7 +53,7 @@ export class AuthService {
     });
 
     // Generate tokens
-    return this.generateTokens(user.id, user.role);
+    return this.generateTokens(user.id, user.role, user.displayName, user.email);
   }
 
   /**
@@ -74,14 +74,30 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    return this.generateTokens(user.id, user.role);
+    return this.generateTokens(user.id, user.role, user.displayName, user.email);
+  }
+
+  /**
+   * Fetch complete user profile for account management.
+   */
+  async getProfile(userId: string) {
+    const user = await this.userRepository.findFullProfile(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    return user;
   }
 
   /**
    * Generate access + refresh JWT pair.
    */
-  private generateTokens(userId: string, role: UserRole): AuthResponseDto {
-    const payload = { sub: userId, role };
+  private generateTokens(
+    userId: string,
+    role: UserRole,
+    displayName?: string,
+    email?: string,
+  ): AuthResponseDto {
+    const payload = { sub: userId, role, displayName, email };
 
     const accessToken = this.jwtService.sign(payload);
 
@@ -95,6 +111,8 @@ export class AuthService {
       refreshToken,
       userId,
       role,
+      displayName,
+      email,
     };
   }
 }
