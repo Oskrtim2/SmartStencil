@@ -7,6 +7,7 @@ import { validationSchema } from './config/validation.schema';
 import { IdentityModule } from './modules/identity/identity.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
 import { SharingModule } from './modules/sharing/sharing.module';
+import { AiModule } from './modules/ai/ai.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 
 @Module({
@@ -42,6 +43,7 @@ import { PrismaModule } from './common/prisma/prisma.module';
     IdentityModule,
     CatalogModule,
     SharingModule,
+    AiModule,
   ],
 })
 export class AppModule {}
