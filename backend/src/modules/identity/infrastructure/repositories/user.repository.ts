@@ -18,7 +18,7 @@ interface CreateUserWithProfileInput {
  */
 @Injectable()
 export class UserRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Find a user by email (case-insensitive).
@@ -76,6 +76,26 @@ export class UserRepository {
     return this.prisma.user.findUnique({
       where: { id: userId },
       include: { artistProfile: true },
+    });
+  }
+
+  /**
+   * Find user with both possible profile relations for account management.
+   */
+  async findFullProfile(userId: string) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        role: true,
+        avatarUrl: true,
+        isActive: true,
+        createdAt: true,
+        artistProfile: true,
+        clientProfile: true,
+      },
     });
   }
 }
