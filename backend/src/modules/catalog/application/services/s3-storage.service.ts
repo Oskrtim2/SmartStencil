@@ -27,8 +27,12 @@ export class S3StorageService {
   private readonly presignedUrlTtl: number;
 
   constructor(private readonly configService: ConfigService) {
+    const endpoint = this.configService.get<string>('s3.endpoint');
+    const forcePathStyle = this.configService.get<boolean>('s3.forcePathStyle');
+
     this.s3Client = new S3Client({
       region: this.configService.get<string>('s3.region')!,
+      ...(endpoint ? { endpoint, forcePathStyle: forcePathStyle ?? true } : {}),
       credentials: {
         accessKeyId: this.configService.get<string>('s3.accessKeyId')!,
         secretAccessKey: this.configService.get<string>('s3.secretAccessKey')!,

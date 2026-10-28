@@ -18,6 +18,8 @@ export const s3Config = registerAs('s3', () => ({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
   bucketName: process.env.S3_BUCKET_NAME!,
   presignedUrlTtl: parseInt(process.env.S3_PRESIGNED_URL_TTL ?? '300', 10),
+  endpoint: process.env.AWS_ENDPOINT || undefined,
+  forcePathStyle: process.env.AWS_FORCE_PATH_STYLE === 'true',
 }));
 
 export const shareConfig = registerAs('share', () => ({

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../core/network/api_client.dart';
+import '../../../core/network/api_config.dart';
 
 class UserSession {
   final String userId;
@@ -240,9 +241,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 }
 
 final apiClientProvider = Provider<ApiClient>((ref) {
-  // Uses Android emulator host or localhost depending on platform
-  const baseUrl = 'http://localhost:3000';
-  return ApiClient(baseUrl: baseUrl);
+  return ApiClient(baseUrl: ApiConfig.baseUrl);
 });
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {

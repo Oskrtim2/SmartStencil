@@ -20,11 +20,14 @@ async function bootstrap() {
     }),
   );
 
-  // CORS
+  // CORS configuration (supports comma-separated origins or open by default for mobile/swagger)
+  const corsOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+    : true;
+
   app.enableCors({
-    origin: process.env.NODE_ENV === 'production'
-      ? ['https://inksight.app']
-      : true,
+    origin: corsOrigins,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
 
@@ -37,6 +40,7 @@ async function bootstrap() {
     .setDescription('AR Tattoo Preview Platform API')
     .setVersion('1.0')
     .addBearerAuth()
+    .addTag('health', 'Liveness and readiness health checks')
     .addTag('auth', 'Authentication & registration')
     .addTag('designs', 'Tattoo design catalog management')
     .addTag('sharing', 'Secure design sharing & QR generation')
@@ -45,13 +49,13 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document);
 
-  // Start server
+  // Start server on 0.0.0.0 for cloud hosting compatibility
   const configService = app.get(ConfigService);
-  const port = configService.get<number>('app.port', 3000);
-  await app.listen(port);
+  const port = Number(process.env.PORT) || configService.get<number>('app.port', 3000);
+  await app.listen(port, '0.0.0.0');
 
-  console.log(`🖌️  InkSight API running on http://localhost:${port}`);
-  console.log(`📚 Swagger docs at http://localhost:${port}/api/docs`);
+  console.log(`🖌️  InkSight API running on port ${port} (0.0.0.0)`);
+  console.log(`📚 Swagger docs at http://0.0.0.0:${port}/api/docs`);
 }
 
 bootstrap();

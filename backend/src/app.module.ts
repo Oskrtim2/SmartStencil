@@ -9,6 +9,7 @@ import { CatalogModule } from './modules/catalog/catalog.module';
 import { SharingModule } from './modules/sharing/sharing.module';
 import { AiModule } from './modules/ai/ai.module';
 import { PrismaModule } from './common/prisma/prisma.module';
+import { HealthModule } from './common/health/health.module';
 
 @Module({
   imports: [
@@ -36,8 +37,9 @@ import { PrismaModule } from './common/prisma/prisma.module';
       },
     ]),
 
-    // Database
+    // Database & Monitoring
     PrismaModule,
+    HealthModule,
 
     // DDD Bounded Contexts
     IdentityModule,

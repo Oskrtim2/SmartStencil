@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../core/network/api_client.dart';
+import '../../../core/network/api_config.dart';
 
 /// QR code scanner screen for the client flow.
 ///
@@ -211,8 +212,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   }
 
   String _getApiBaseUrl() {
-    // TODO: Load from environment config
-    return 'https://api.inksight.app';
+    return ApiConfig.baseUrl;
   }
 
   @override
