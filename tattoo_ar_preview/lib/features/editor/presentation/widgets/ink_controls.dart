@@ -196,27 +196,33 @@ class _GalleryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: hasDesign
+    return Semantics(
+      button: true,
+      label: hasDesign
           ? 'Reemplazar diseño PNG'
           : 'Importar diseño PNG transparente',
-      child: FloatingActionButton.small(
-        heroTag: 'smartstencil-gallery',
-        onPressed: enabled && !isPicking ? onPressed : null,
-        elevation: 0,
-        highlightElevation: 0,
-        backgroundColor: AppColors.surfaceHigh,
-        foregroundColor: AppColors.accent,
-        child: isPicking
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.4,
-                  color: AppColors.accent,
-                ),
-              )
-            : const Icon(Icons.add_photo_alternate_outlined),
+      child: Tooltip(
+        message: hasDesign
+            ? 'Reemplazar diseño PNG'
+            : 'Importar diseño PNG transparente',
+        child: FloatingActionButton(
+          heroTag: 'smartstencil-gallery',
+          onPressed: enabled && !isPicking ? onPressed : null,
+          elevation: 0,
+          highlightElevation: 0,
+          backgroundColor: AppColors.surfaceHigh,
+          foregroundColor: AppColors.accent,
+          child: isPicking
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.4,
+                    color: AppColors.accent,
+                  ),
+                )
+              : const Icon(Icons.add_photo_alternate_outlined),
+        ),
       ),
     );
   }

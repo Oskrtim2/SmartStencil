@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class EditorTopBar extends StatelessWidget {
@@ -118,8 +119,8 @@ class _GlassIconButton extends StatelessWidget {
           onTap: onPressed,
           customBorder: const CircleBorder(),
           child: SizedBox(
-            width: 46,
-            height: 46,
+            width: AppConstants.minTouchTarget,
+            height: AppConstants.minTouchTarget,
             child: Icon(icon, color: AppColors.textPrimary, size: 22),
           ),
         ),
