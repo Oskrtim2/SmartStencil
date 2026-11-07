@@ -158,13 +158,13 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
                   child: _buildChrome(),
                 ),
               ),
-              if (_isCapturing) const _CaptureProgressOverlay(),
               IgnorePointer(
                 child: FadeTransition(
                   opacity: _flashAnimation,
                   child: const ColoredBox(color: Colors.white),
                 ),
               ),
+              if (_isCapturing) const _CaptureProgressOverlay(),
             ],
           ),
         ),
