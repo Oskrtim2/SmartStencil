@@ -37,6 +37,8 @@ procesamiento ocurre en el dispositivo.
 - `share_plus` 13.3.1.
 - `path_provider` 2.1.6.
 - `permission_handler` 11.4.0.
+- `image_background_remover` 2.0.1 con U2-Net ONNX empaquetado (4.6 MB).
+- `flutter_onnxruntime` 1.9.0.
 
 ## Ejecutar
 
@@ -61,7 +63,8 @@ tattoo_ar_preview/build/app/outputs/flutter-apk/app-debug.apk
 
 ## Compilar iOS
 
-Requiere macOS con Xcode y CocoaPods:
+Requiere macOS con Xcode y CocoaPods. SmartStencil usa iOS 16+ por el runtime
+ONNX:
 
 ```bash
 cd tattoo_ar_preview
