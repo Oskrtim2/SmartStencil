@@ -85,6 +85,7 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         unawaited(_cameraSession.initialize());
+        unawaited(_recoverLostImport());
       }
     });
   }
@@ -250,6 +251,28 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
   void _resetTransform() {
     _gestures.reset();
     HapticFeedback.selectionClick();
+  }
+
+  Future<void> _recoverLostImport() async {
+    try {
+      final TattooDesign? design = await _tattooRepository.retrieveLostDesign();
+      if (!mounted || _isPicking || _design != null) {
+        design?.dispose();
+        return;
+      }
+      if (design == null) {
+        return;
+      }
+      setState(() => _design = design);
+      _gestures.reset();
+      _showMessage('Recuperamos el diseño que estabas importando.');
+    } on TattooImportFailure catch (failure) {
+      if (mounted) {
+        _showMessage(failure.message);
+      }
+    } catch (_) {
+      return;
+    }
   }
 
   Future<void> _importDesign() async {

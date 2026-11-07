@@ -55,6 +55,41 @@ class TattooRepository {
       return null;
     }
 
+    return _designFromFile(file);
+  }
+
+  Future<TattooDesign?> retrieveLostDesign() async {
+    final LostDataResponse response;
+    try {
+      response = await _picker.retrieveLostData();
+    } on UnimplementedError {
+      return null;
+    } on PlatformException catch (error) {
+      throw TattooImportFailure(
+        _pickerMessage(error),
+        canOpenSettings: _isPermissionError(error),
+      );
+    }
+
+    if (response.isEmpty) {
+      return null;
+    }
+    if (response.exception != null) {
+      throw const TattooImportFailure(
+        'No se pudo recuperar la imagen seleccionada. Inténtalo de nuevo.',
+      );
+    }
+    final List<XFile>? files = response.files;
+    final XFile? file =
+        response.file ??
+        (files != null && files.isNotEmpty ? files.first : null);
+    if (file == null) {
+      return null;
+    }
+    return _designFromFile(file);
+  }
+
+  Future<TattooDesign> _designFromFile(XFile file) async {
     final Uint8List bytes;
     try {
       bytes = await file.readAsBytes();
