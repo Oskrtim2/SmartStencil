@@ -301,10 +301,14 @@ class CaptureService {
       }
       unawaited(_pruneCaptures(folder));
       return file;
-    } catch (error) {
-      if (error is CaptureFailure) {
-        rethrow;
-      }
+    } on FileSystemException {
+      throw const CaptureFailure(
+        'No hay espacio suficiente o el almacenamiento no está disponible '
+        'para guardar la captura.',
+      );
+    } on CaptureFailure {
+      rethrow;
+    } catch (_) {
       throw const CaptureFailure(
         'No se pudo guardar la captura en el dispositivo.',
       );
