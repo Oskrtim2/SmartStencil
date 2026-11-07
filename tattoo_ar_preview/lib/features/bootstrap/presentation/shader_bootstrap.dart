@@ -18,15 +18,20 @@ class _ShaderBootstrapState extends State<ShaderBootstrap> {
 
   late Future<ui.FragmentProgram> _programFuture;
 
+  Future<ui.FragmentProgram> _loadProgram() {
+    return ui.FragmentProgram.fromAsset(_shaderAsset)
+        .timeout(AppConstants.shaderLoadTimeout);
+  }
+
   @override
   void initState() {
     super.initState();
-    _programFuture = ui.FragmentProgram.fromAsset(_shaderAsset);
+    _programFuture = _loadProgram();
   }
 
   void _retry() {
     setState(() {
-      _programFuture = ui.FragmentProgram.fromAsset(_shaderAsset);
+      _programFuture = _loadProgram();
     });
   }
 
