@@ -278,7 +278,7 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
 
   void _resetTransform() {
     _gestures.reset();
-    HapticFeedback.selectionClick();
+    unawaited(HapticFeedback.selectionClick());
   }
 
   Future<void> _recoverLostImport() async {
@@ -322,7 +322,7 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
       final TattooDesign? previous = _design;
       setState(() => _design = design);
       _gestures.reset();
-      HapticFeedback.selectionClick();
+      unawaited(HapticFeedback.selectionClick());
       _showMessage('Diseño importado correctamente.');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         previous?.dispose();
@@ -367,7 +367,7 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
     final double devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
     final Rect shareOrigin = _shareOrigin();
 
-    HapticFeedback.mediumImpact();
+    unawaited(HapticFeedback.mediumImpact());
     final Completer<void> captureCompleter = Completer<void>();
     _captureCompleter = captureCompleter;
     setState(() => _isCapturing = true);
