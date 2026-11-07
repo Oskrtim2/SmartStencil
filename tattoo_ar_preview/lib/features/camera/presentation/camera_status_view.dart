@@ -77,31 +77,40 @@ class CameraStatusView extends StatelessWidget {
                     ),
                   ] else ...<Widget>[
                     const SizedBox(height: 28),
-                    FilledButton.icon(
-                      onPressed: isPermanentlyDenied
-                          ? () => unawaited(_openSettings(context))
-                          : onRetry,
-                      icon: Icon(
-                        isPermanentlyDenied
-                            ? Icons.settings_outlined
-                            : Icons.refresh_rounded,
-                      ),
-                      label: Text(
-                        isPermanentlyDenied
-                            ? 'Abrir ajustes'
-                            : status == CameraStatus.permissionDenied
-                            ? 'Permitir cámara'
-                            : 'Reintentar',
-                      ),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: <Widget>[
+                        FilledButton.icon(
+                          onPressed: isPermanentlyDenied
+                              ? () => unawaited(_openSettings(context))
+                              : onRetry,
+                          icon: Icon(
+                            isPermanentlyDenied
+                                ? Icons.settings_outlined
+                                : Icons.refresh_rounded,
+                          ),
+                          label: Text(
+                            isPermanentlyDenied
+                                ? 'Abrir ajustes'
+                                : status == CameraStatus.permissionDenied
+                                ? 'Permitir cámara'
+                                : 'Reintentar',
+                          ),
+                        ),
+                        if (status == CameraStatus.permissionDenied)
+                          TextButton.icon(
+                            onPressed: () => unawaited(_openSettings(context)),
+                            icon: const Icon(
+                              Icons.open_in_new_rounded,
+                              size: 18,
+                            ),
+                            label: const Text('Abrir ajustes del sistema'),
+                          ),
+                      ],
                     ),
-                    if (status == CameraStatus.permissionDenied) ...<Widget>[
-                      const SizedBox(height: 8),
-                      TextButton.icon(
-                        onPressed: () => unawaited(_openSettings(context)),
-                        icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                        label: const Text('Abrir ajustes del sistema'),
-                      ),
-                    ],
                   ],
                 ],
               ),
