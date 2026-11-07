@@ -34,13 +34,17 @@ class TattooTransform {
   }
 
   TattooTransform normalized() {
+    final double safeScale = scale.isNaN ? 1 : scale;
+    final double safeRotation = rotation.isFinite ? rotation : 0;
+    final double dx = translation.dx.isNaN ? 0 : translation.dx;
+    final double dy = translation.dy.isNaN ? 0 : translation.dy;
     return TattooTransform(
       translation: Offset(
-        translation.dx.clamp(-maxTranslation, maxTranslation).toDouble(),
-        translation.dy.clamp(-maxTranslation, maxTranslation).toDouble(),
+        dx.clamp(-maxTranslation, maxTranslation).toDouble(),
+        dy.clamp(-maxTranslation, maxTranslation).toDouble(),
       ),
-      scale: scale.clamp(minScale, maxScale).toDouble(),
-      rotation: _normalizeAngle(rotation),
+      scale: safeScale.clamp(minScale, maxScale).toDouble(),
+      rotation: _normalizeAngle(safeRotation),
     );
   }
 

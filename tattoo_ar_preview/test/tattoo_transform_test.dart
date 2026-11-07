@@ -39,5 +39,28 @@ void main() {
       expect(a, b);
       expect(a.hashCode, b.hashCode);
     });
+
+    test('sanitizes non-finite values', () {
+      final TattooTransform normalized = const TattooTransform(
+        translation: Offset(double.nan, double.infinity),
+        scale: double.nan,
+        rotation: double.nan,
+      ).normalized();
+
+      expect(normalized.translation.dx, 0);
+      expect(normalized.translation.dy, TattooTransform.maxTranslation);
+      expect(normalized.scale, 1);
+      expect(normalized.rotation, 0);
+
+      final TattooTransform saturated = const TattooTransform(
+        translation: Offset(double.infinity, 0),
+        scale: double.infinity,
+        rotation: double.infinity,
+      ).normalized();
+
+      expect(saturated.translation.dx, TattooTransform.maxTranslation);
+      expect(saturated.scale, TattooTransform.maxScale);
+      expect(saturated.rotation, 0);
+    });
   });
 }
