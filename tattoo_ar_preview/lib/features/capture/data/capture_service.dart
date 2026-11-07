@@ -14,6 +14,7 @@ import '../../../core/errors/app_failure.dart';
 import '../../tattoo/domain/tattoo_transform.dart';
 import '../../tattoo/rendering/ink_shader.dart';
 import '../domain/capture_geometry.dart';
+import '../domain/capture_guard.dart';
 
 enum CaptureSource { cameraStill, previewBoundary }
 
@@ -48,8 +49,35 @@ class CaptureService {
   static const int _maxCachedCaptures = AppConstants.maxCachedCaptures;
 
   final SharePlus _sharePlus;
+  final CaptureGuard _guard = CaptureGuard();
 
   Future<CaptureResult> captureAndShare({
+    required CameraController? camera,
+    required GlobalKey previewKey,
+    required ui.Image tattooImage,
+    required TattooTransform transform,
+    required double opacity,
+    required ui.Size viewportSize,
+    required InkShaderComposer composer,
+    required double devicePixelRatio,
+    required ui.Rect sharePositionOrigin,
+  }) {
+    return _guard.run(
+      () => _captureAndShare(
+        camera: camera,
+        previewKey: previewKey,
+        tattooImage: tattooImage,
+        transform: transform,
+        opacity: opacity,
+        viewportSize: viewportSize,
+        composer: composer,
+        devicePixelRatio: devicePixelRatio,
+        sharePositionOrigin: sharePositionOrigin,
+      ),
+    );
+  }
+
+  Future<CaptureResult> _captureAndShare({
     required CameraController? camera,
     required GlobalKey previewKey,
     required ui.Image tattooImage,
