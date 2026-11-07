@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -77,7 +79,7 @@ class CameraStatusView extends StatelessWidget {
                     const SizedBox(height: 28),
                     FilledButton.icon(
                       onPressed: isPermanentlyDenied
-                          ? () => session.openSettings()
+                          ? () => unawaited(_openSettings(context))
                           : onRetry,
                       icon: Icon(
                         isPermanentlyDenied
@@ -95,7 +97,7 @@ class CameraStatusView extends StatelessWidget {
                     if (status == CameraStatus.permissionDenied) ...<Widget>[
                       const SizedBox(height: 8),
                       TextButton.icon(
-                        onPressed: () => session.openSettings(),
+                        onPressed: () => unawaited(_openSettings(context)),
                         icon: const Icon(Icons.open_in_new_rounded, size: 18),
                         label: const Text('Abrir ajustes del sistema'),
                       ),
@@ -108,6 +110,17 @@ class CameraStatusView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _openSettings(BuildContext context) async {
+    final bool opened = await session.openSettings();
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudieron abrir los ajustes del sistema.'),
+        ),
+      );
+    }
   }
 
   _StatusContent _contentFor(CameraStatus status, String? errorMessage) {

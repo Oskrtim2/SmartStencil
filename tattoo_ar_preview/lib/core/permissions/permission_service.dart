@@ -47,5 +47,11 @@ class PermissionService implements PermissionGateway {
   }
 
   @override
-  Future<bool> openSettings() => openAppSettings();
+  Future<bool> openSettings() async {
+    try {
+      return await openAppSettings();
+    } catch (_) {
+      return false;
+    }
+  }
 }
