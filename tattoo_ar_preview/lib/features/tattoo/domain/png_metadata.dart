@@ -62,14 +62,20 @@ class PngMetadata {
     if (width == 0 || height == 0) {
       return null;
     }
+    final int colorType = bytes[25];
+    if (!_supportedColorTypes.contains(colorType)) {
+      return null;
+    }
     return PngMetadata(
       width: width,
       height: height,
-      colorType: bytes[25],
+      colorType: colorType,
       hasTransparencyChunk: _hasTransparencyChunk(bytes),
       byteLength: bytes.length,
     );
   }
+
+  static const Set<int> _supportedColorTypes = <int>{0, 2, 3, 4, 6};
 
   static bool _hasTransparencyChunk(Uint8List bytes) {
     if (bytes.length < 8) {

@@ -43,6 +43,14 @@ void main() {
       expect(PngMetadata.tryParse(buildPng(width: 0, height: 10)), isNull);
     });
 
+    test('rejects unsupported PNG color types', () {
+      expect(PngMetadata.tryParse(buildPng(colorType: 1)), isNull);
+      expect(PngMetadata.tryParse(buildPng(colorType: 5)), isNull);
+      expect(PngMetadata.tryParse(buildPng(colorType: 7)), isNull);
+      expect(PngMetadata.tryParse(buildPng(colorType: 2)), isNotNull);
+      expect(PngMetadata.tryParse(buildPng(colorType: 3)), isNotNull);
+    });
+
     test('rejects chunks whose declared length exceeds the file', () {
       final Uint8List bytes = buildPng();
       final ByteData view = ByteData.sublistView(bytes);
