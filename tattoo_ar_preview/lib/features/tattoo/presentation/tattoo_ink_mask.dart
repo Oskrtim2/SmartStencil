@@ -28,6 +28,9 @@ class TattooInkMask extends StatelessWidget {
       listenable: Listenable.merge(<Listenable>[gestures, opacity]),
       child: child,
       builder: (BuildContext context, Widget? camera) {
+        if (opacity.value <= 0) {
+          return camera ?? const SizedBox.shrink();
+        }
         return ShaderMask(
           blendMode: BlendMode.multiply,
           shaderCallback: (Rect bounds) {
