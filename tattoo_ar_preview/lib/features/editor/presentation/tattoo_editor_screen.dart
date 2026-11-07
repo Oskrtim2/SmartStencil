@@ -49,6 +49,7 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
   TattooDesign? _design;
   bool _isPicking = false;
   bool _isCapturing = false;
+  Completer<void>? _captureCompleter;
   Size _viewportSize = Size.zero;
 
   @override
@@ -108,7 +109,16 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _cameraSession.dispose();
-    _design?.dispose();
+    final TattooDesign? design = _design;
+    final Completer<void>? captureCompleter = _captureCompleter;
+    if (design != null) {
+      if (captureCompleter != null && !captureCompleter.isCompleted) {
+        unawaited(captureCompleter.future.whenComplete(design.dispose));
+      } else {
+        design.dispose();
+      }
+    }
+    _design = null;
     _opacity.dispose();
     _gestures.dispose();
     _flashController.dispose();
@@ -340,6 +350,8 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
     final Rect shareOrigin = _shareOrigin();
 
     HapticFeedback.mediumImpact();
+    final Completer<void> captureCompleter = Completer<void>();
+    _captureCompleter = captureCompleter;
     setState(() => _isCapturing = true);
     _flashController.forward(from: 0);
     await WidgetsBinding.instance.endOfFrame;
@@ -387,6 +399,12 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
         ),
       );
     } finally {
+      if (identical(_captureCompleter, captureCompleter)) {
+        _captureCompleter = null;
+      }
+      if (!captureCompleter.isCompleted) {
+        captureCompleter.complete();
+      }
       if (mounted) {
         setState(() => _isCapturing = false);
       }
