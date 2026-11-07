@@ -291,6 +291,14 @@ class CaptureService {
         '${folder.path}${Platform.pathSeparator}${_fileNamer.next()}',
       );
       await file.writeAsBytes(bytes, flush: true);
+      final int writtenLength = await file.length();
+      if (writtenLength != bytes.length) {
+        await _deleteQuietly(file);
+        throw const CaptureFailure(
+          'La captura se guardó incompleta. Comprueba el espacio libre del '
+          'dispositivo.',
+        );
+      }
       unawaited(_pruneCaptures(folder));
       return file;
     } catch (error) {
@@ -300,6 +308,14 @@ class CaptureService {
       throw const CaptureFailure(
         'No se pudo guardar la captura en el dispositivo.',
       );
+    }
+  }
+
+  Future<void> _deleteQuietly(File file) async {
+    try {
+      await file.delete();
+    } catch (_) {
+      return;
     }
   }
 
