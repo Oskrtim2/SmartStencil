@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/errors/app_failure.dart';
+import '../domain/alpha_validator.dart';
 import '../domain/png_metadata.dart';
 
 class TattooDesign {
@@ -100,8 +101,13 @@ class TattooRepository {
       );
     }
 
-    await _ensureTransparentPixels(bytes);
     final ui.Image image = await _decodeDesign(bytes, metadata);
+    try {
+      await _ensureTransparentImage(image);
+    } catch (_) {
+      image.dispose();
+      rethrow;
+    }
 
     return TattooDesign(
       image: image,
@@ -114,49 +120,24 @@ class TattooRepository {
     return PngMetadata.hasPngSignature(bytes);
   }
 
-  Future<void> _ensureTransparentPixels(Uint8List bytes) async {
-    ui.Codec? codec;
-    ui.Image? image;
-    try {
-      codec = await ui.instantiateImageCodec(
-        bytes,
-        targetWidth: 160,
-        allowUpscaling: false,
-      );
-      final ui.FrameInfo frame = await codec.getNextFrame();
-      image = frame.image;
-      final ByteData? data = await image.toByteData(
-        format: ui.ImageByteFormat.rawRgba,
-      );
-      if (data == null) {
-        return;
-      }
-      final Uint8List pixels = data.buffer.asUint8List(
-        data.offsetInBytes,
-        data.lengthInBytes,
-      );
-      bool hasTransparency = false;
-      for (int index = 3; index < pixels.length; index += 4) {
-        if (pixels[index] < 250) {
-          hasTransparency = true;
-          break;
-        }
-      }
-      if (!hasTransparency) {
-        throw const TattooImportFailure(
-          'El PNG no contiene zonas transparentes. Usa un diseño con el '
-          'fondo transparente.',
-        );
-      }
-    } on TattooImportFailure {
-      rethrow;
-    } catch (_) {
+  Future<void> _ensureTransparentImage(ui.Image image) async {
+    final ByteData? data = await image.toByteData(
+      format: ui.ImageByteFormat.rawRgba,
+    );
+    if (data == null) {
       throw const TattooImportFailure(
         'No se pudo verificar la transparencia del PNG.',
       );
-    } finally {
-      image?.dispose();
-      codec?.dispose();
+    }
+    final Uint8List pixels = data.buffer.asUint8List(
+      data.offsetInBytes,
+      data.lengthInBytes,
+    );
+    if (!AlphaValidator.hasTransparentPixel(pixels)) {
+      throw const TattooImportFailure(
+        'El PNG no contiene zonas transparentes. Usa un diseño con el '
+        'fondo transparente.',
+      );
     }
   }
 
