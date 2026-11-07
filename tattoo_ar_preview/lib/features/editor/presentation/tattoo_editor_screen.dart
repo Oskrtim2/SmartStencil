@@ -35,7 +35,7 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
   late final CameraSession _cameraSession;
   late final TattooRepository _tattooRepository;
   late final CaptureService _captureService;
-  late final InkShaderComposer _inkComposer;
+  late InkShaderComposer _inkComposer;
   late final AnimationController _flashController;
   late final Animation<double> _flashAnimation;
 
@@ -90,6 +90,14 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
         unawaited(_captureService.cleanupCache());
       }
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant TattooEditorScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.inkProgram, widget.inkProgram)) {
+      _inkComposer = InkShaderComposer(program: widget.inkProgram);
+    }
   }
 
   @override
