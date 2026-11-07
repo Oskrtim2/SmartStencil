@@ -13,6 +13,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../tattoo/domain/tattoo_transform.dart';
 import '../../tattoo/rendering/ink_shader.dart';
+import '../domain/capture_file_namer.dart';
 import '../domain/capture_geometry.dart';
 import '../domain/capture_guard.dart';
 
@@ -50,6 +51,7 @@ class CaptureService {
 
   final SharePlus _sharePlus;
   final CaptureGuard _guard = CaptureGuard();
+  final CaptureFileNamer _fileNamer = CaptureFileNamer();
 
   Future<CaptureResult> captureAndShare({
     required CameraController? camera,
@@ -269,9 +271,7 @@ class CaptureService {
         await folder.create(recursive: true);
       }
       final File file = File(
-        '${folder.path}${Platform.pathSeparator}'
-        '${AppConstants.capturesFilePrefix}'
-        '${DateTime.now().millisecondsSinceEpoch}.png',
+        '${folder.path}${Platform.pathSeparator}${_fileNamer.next()}',
       );
       await file.writeAsBytes(bytes, flush: true);
       unawaited(_pruneCaptures(folder));
