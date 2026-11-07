@@ -6,6 +6,13 @@ Todas las modificaciones relevantes de SmartStencil se documentan aquí.
 
 ### Added
 
+- Importación de cualquier formato de imagen y conversión automática a stencil
+  negro transparente.
+- Segmentación de fondo on-device con U2-Net ONNX empaquetado (4.6 MB), sin
+  descargas ni red.
+- Detección automática de fondo plano, PNG transparente y fondo complejo.
+- Eliminación de ruido, componentes pequeños y márgenes vacíos.
+- Exportación y compartición del stencil como PNG transparente.
 - Recuperación de selecciones de galería perdidas tras la recreación de la
   actividad Android.
 - Reinicio del diseño con doble toque.

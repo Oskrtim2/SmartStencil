@@ -8,9 +8,11 @@ cámara del dispositivo.
 - Proyecto: [`tattoo_ar_preview/`](tattoo_ar_preview/)
 - Plataformas: Android e iOS.
 - Sin backend, base de datos, autenticación ni internet.
+- Importa cualquier imagen y la convierte en un stencil transparente.
+- IA U2-Net empaquetada para eliminar fondos complejos sin conexión.
+- Exporta el stencil como PNG transparente.
 - Tinta realista con shader GLSL y `BlendMode.multiply`.
-- Importación de PNG transparentes, gestos multitáctiles, intensidad de tinta y
-  captura con share sheet nativo.
+- Gestos multitáctiles, intensidad de tinta y captura con share sheet nativo.
 
 ## Inicio rápido
 

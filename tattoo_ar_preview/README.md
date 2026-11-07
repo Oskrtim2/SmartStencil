@@ -1,21 +1,33 @@
 # SmartStencil
 
 Probador de tatuajes en tiempo real, **100 % offline**, para Android e iOS.
-La app usa la cámara trasera, importa diseños PNG con transparencia y compone
-la tinta sobre la piel con un shader de multiplicación, conservando poros,
-vellos, brillos y la iluminación real de la escena.
+La app usa la cámara trasera, importa **cualquier imagen** (PNG, JPG, WebP,
+HEIC…), la convierte en un **stencil negro transparente** y compone la tinta
+sobre la piel con un shader de multiplicación, conservando poros, vellos, brillos
+y la iluminación real de la escena.
 
 No hay backend, base de datos, autenticación ni peticiones de red. Todo el
-procesamiento ocurre en el dispositivo.
+procesamiento, incluida la IA de segmentación de fondo, ocurre en el dispositivo.
 
 ## Funcionalidades
 
 - Vista previa de la cámara trasera con autoenfoque y autoexposición.
 - Composición a pantalla completa sin distorsión, con recorte tipo `cover` y
   soporte de rotación.
-- Importación de diseños PNG con canal alfa desde la galería.
-- Validación real del archivo: firma PNG, cabecera IHDR, canal alfa o `tRNS`,
-  píxeles transparentes, tamaño máximo de 25 MB y textura máxima de 2048 px.
+- Importación de **cualquier formato de imagen** que el decodificador del
+  sistema pueda leer: PNG, JPEG, WebP, HEIC, GIF, BMP…
+- Conversión automática a un stencil transparente:
+  - PNG con transparencia: conserva el alfa y convierte cualquier color en tinta
+    negra.
+  - Fondo plano: detecta el color dominante del borde, lo elimina y convierte
+    las líneas de color en negro.
+  - Fondo complejo: un modelo **U2-Net ONNX de 4.6 MB empaquetado en la app**
+    elimina el fondo on-device sin descargas ni red; después se extraen los
+    contornos y se limpian los elementos pequeños.
+- Eliminación de ruido, componentes aislados y márgenes vacíos antes de cargar el
+  stencil.
+- Exportación del stencil procesado como **PNG transparente** mediante el share
+  sheet nativo.
 - Transformación multitáctil simultánea:
   - 1 dedo: arrastre.
   - 2 dedos: pellizco para escalar (0.22×–6×) y giro sobre el centro.
@@ -26,8 +38,8 @@ procesamiento ocurre en el dispositivo.
   y apertura inmediata del share sheet nativo para enviar a WhatsApp u otra app.
 - Botón de disparo con flash visual, ocultación de controles durante la captura
   y confirmación por snackbar.
-- Manejo de errores de permisos, cámara ausente, cámara en uso, PNG inválido,
-  fallo de captura y fallo del shader.
+- Manejo de errores de permisos, cámara ausente, cámara en uso, formato no
+  soportado, fallo de conversión/captura y fallo del shader.
 
 ## Stack
 
@@ -96,6 +108,26 @@ La app solicita cámara con `permission_handler`; la galería usa el selector de
 sistema de `image_picker`. En iOS se solicita además acceso a Fotos, pero el
 selector PHPicker puede continuar aunque el permiso no se conceda.
 
+## Conversión local a stencil
+
+1. La imagen se decodifica con el códec de Flutter a RGBA, limitada a 2048 px
+   en el lado largo.
+2. Si ya tiene transparencia, se conserva su alfa y los colores se convierten en
+   negro.
+3. Si el borde tiene un color plano dominante (papel blanco, fondo de color),
+   ese fondo se elimina por distancia de color y las líneas de color se
+   convierten en negro.
+4. Si el fondo es complejo (foto, degradado), se ejecuta **U2-Net** mediante
+   ONNX Runtime con el modelo empaquetado en la app. La máscara resultante se
+   procesa con detección de bordes para conservar el line-art y evitar rellenar
+   zonas planas del sujeto.
+5. El resultado pasa por una limpieza de componentes pequeños, eliminación de
+   márgenes vacíos y generación de un PNG/`ui.Image` transparente.
+6. El usuario puede compartir ese stencil como PNG desde la barra superior.
+
+La inferencia y el procesamiento de píxeles se hacen en el dispositivo. El
+modelo no se descarga en tiempo de ejecución; viaja dentro del APK/IPA.
+
 ## Cómo se compone la tinta
 
 1. El `CameraPreview` se muestra a pantalla completa con `FittedBox.cover`.
@@ -138,16 +170,24 @@ lib/
       presentation/widgets/editor_top_bar.dart
       presentation/widgets/ink_controls.dart
     tattoo/
+      data/stencil_export_service.dart
       data/tattoo_repository.dart
       domain/tattoo_gesture_controller.dart
       domain/tattoo_transform.dart
       presentation/tattoo_ink_mask.dart
+      processing/background_analysis.dart
+      processing/background_removal_engine.dart
+      processing/stencil_processor.dart
       rendering/ink_shader.dart
 shaders/
   ink_blend.frag
 test/
+  background_analysis_test.dart
   capture_geometry_test.dart
+  capture_result_test.dart
+  ink_controls_test.dart
   png_validation_test.dart
+  stencil_processor_test.dart
   tattoo_gesture_controller_test.dart
   tattoo_transform_test.dart
 ```
@@ -161,10 +201,11 @@ dart analyze lib test
 dart format --output=none --set-exit-if-changed lib test
 ```
 
-La suite incluye 52 pruebas y cubre límites de escala/traslación, valores no
+La suite incluye 63 pruebas y cubre límites de escala/traslación, valores no
 finitos, gestos multitáctiles incrementales, rebase por cambio de viewport,
-geometría de recorte y relaciones de aspecto extremas, validación de firma,
-cabecera y presupuesto de píxeles PNG, transparencia, guardas de concurrencia,
+geometría de recorte y relaciones de aspecto extremas, análisis de fondos
+planos/gradientes, conversión de color a tinta, preservación de alfa, eliminación
+de ruido y recorte, extracción de bordes en modo IA, guardas de concurrencia,
 nombres de archivo, permisos y timeouts de cámara, mensajes de resultado,
 controles de tinta y tamaño base del shader.
 
@@ -182,14 +223,21 @@ el build del APK debug.
 - Saneamiento de transformaciones no finitas y rebase de gestos.
 - Detección de errores de cámara en tiempo de ejecución.
 - Cierre de la cámara en `inactive`, `hidden`, `paused` y `detached`.
+- IA de fondo empaquetada y ejecutada on-device, con fallback al procesado por
+  color si ONNX no está disponible.
+- Límite de 40 MB para imágenes de entrada y 2048 px de textura.
+- Limpieza de espacio temporal de capturas y stencils exportados.
 - Pruebas de parser PNG y límite de memoria para imágenes maliciosas.
 
 ## Privacidad y almacenamiento
 
 - Sin red, sin analytics, sin cuentas.
-- Las capturas se guardan en el directorio temporal de la app.
-- Se conservan como máximo las 5 capturas más recientes; las anteriores se
-  eliminan automáticamente.
+- El modelo U2-Net y ONNX Runtime están empaquetados en la app; no se descargan
+  modelos ni se envían imágenes a ningún servidor.
+- Las capturas y los stencils exportados se guardan en el directorio temporal de
+  la app.
+- Se conservan como máximo las 5 capturas y los 5 stencils más recientes; los
+  anteriores se eliminan automáticamente.
 - El diseño importado y la captura nunca salen del dispositivo salvo que el
   usuario elija una app en el share sheet del sistema.
 
