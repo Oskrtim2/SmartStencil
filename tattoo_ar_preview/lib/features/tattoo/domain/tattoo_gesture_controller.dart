@@ -7,9 +7,11 @@ import 'tattoo_transform.dart';
 
 class TattooGestureController extends ChangeNotifier {
   TattooTransform _transform = const TattooTransform();
-  TattooTransform _startTransform = const TattooTransform();
-  Offset _startFocalPoint = Offset.zero;
   Size _viewportSize = Size.zero;
+  double _lastGestureScale = 1;
+  double _lastGestureRotation = 0;
+  Offset _lastFocalPoint = Offset.zero;
+  int _lastPointerCount = 0;
 
   TattooTransform get transform => _transform;
 
@@ -18,27 +20,53 @@ class TattooGestureController extends ChangeNotifier {
   }
 
   void onScaleStart(ScaleStartDetails details) {
-    _startTransform = _transform;
-    _startFocalPoint = details.localFocalPoint;
+    _lastGestureScale = 1;
+    _lastGestureRotation = 0;
+    _lastFocalPoint = details.localFocalPoint;
+    _lastPointerCount = details.pointerCount;
   }
 
   void onScaleUpdate(ScaleUpdateDetails details) {
     if (_viewportSize.isEmpty) {
       return;
     }
-    final Offset delta = details.localFocalPoint - _startFocalPoint;
-    final TattooTransform next = _startTransform
+    if (details.pointerCount != _lastPointerCount) {
+      _lastPointerCount = details.pointerCount;
+      _lastGestureScale = details.scale;
+      _lastGestureRotation = details.rotation;
+      _lastFocalPoint = details.localFocalPoint;
+      return;
+    }
+
+    final double gestureScale = details.scale.isFinite && details.scale >= 0
+        ? details.scale
+        : _lastGestureScale;
+    final double gestureRotation = details.rotation.isFinite
+        ? details.rotation
+        : _lastGestureRotation;
+    final double scaleDelta = _lastGestureScale > 0
+        ? gestureScale / _lastGestureScale
+        : 1;
+    final double rotationDelta = gestureRotation - _lastGestureRotation;
+    final Offset focalDelta = details.localFocalPoint - _lastFocalPoint;
+
+    final TattooTransform next = _transform
         .copyWith(
           translation:
-              _startTransform.translation +
+              _transform.translation +
               Offset(
-                delta.dx / _viewportSize.width,
-                delta.dy / _viewportSize.height,
+                focalDelta.dx / _viewportSize.width,
+                focalDelta.dy / _viewportSize.height,
               ),
-          scale: _startTransform.scale * details.scale,
-          rotation: _startTransform.rotation + details.rotation,
+          scale: _transform.scale * scaleDelta,
+          rotation: _transform.rotation + rotationDelta,
         )
         .normalized();
+
+    _lastGestureScale = gestureScale;
+    _lastGestureRotation = gestureRotation;
+    _lastFocalPoint = details.localFocalPoint;
+
     if (next == _transform) {
       return;
     }
