@@ -155,9 +155,10 @@ class CaptureService {
         ),
       );
     } catch (error) {
-      throw CaptureFailure(
+      debugPrint('SmartStencil: share sheet failed: $error');
+      throw const CaptureFailure(
         'La captura se guardó en caché, pero no se pudo abrir el menú de '
-        'compartir ($error).',
+        'compartir.',
       );
     }
 
