@@ -120,19 +120,20 @@ void main() {
       expect(result.height, 8);
     });
 
-    test('applies alpha in AI cutout mode', () {
-      final Uint8List rgba = _image(20, 20, (int x, int y) {
-        if (x >= 8 && x < 12 && y >= 8 && y < 12) {
-          return 0xFF101010;
+    test('uses edges to avoid filling smooth AI subject interiors', () {
+      final Uint8List rgba = _image(30, 30, (int x, int y) {
+        if (x >= 5 && x < 25 && y >= 5 && y < 25) {
+          final bool border = x < 7 || x >= 23 || y < 7 || y >= 23;
+          return border ? 0xFF000000 : 0xFF808080;
         }
         return 0x00000000;
       });
 
-      final StencilResult result = _process(rgba, 20, 20, mode: StencilMode.ai);
+      final StencilResult result = _process(rgba, 30, 30, mode: StencilMode.ai);
 
       expect(result.isEmpty, isFalse);
-      expect(_alphaAt(result, 4, 4), 255);
-      expect(_alphaAt(result, 0, 0), 0);
+      expect(_alphaAt(result, 10, 10), 0);
+      expect(_alphaAt(result, 2, 10), greaterThan(0));
     });
   });
 }

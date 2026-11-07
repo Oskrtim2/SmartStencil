@@ -13,6 +13,7 @@ class StencilOptions {
     this.inkSoftness = 0.07,
     this.edgeBoost = 1.8,
     this.minComponentPixels = 8,
+    this.photoMinComponentPixels = 12,
     this.cropPadding = 2,
     this.alphaCutoff = 8,
   });
@@ -24,6 +25,7 @@ class StencilOptions {
   final double inkSoftness;
   final double edgeBoost;
   final int minComponentPixels;
+  final int photoMinComponentPixels;
   final int cropPadding;
   final int alphaCutoff;
 }
@@ -108,6 +110,8 @@ abstract final class StencilProcessor {
       width,
       height,
       request.options,
+      photoMode:
+          request.mode == StencilMode.ai || request.mode == StencilMode.full,
     );
     final StencilResult cropped = _crop(
       output,
@@ -228,10 +232,10 @@ abstract final class StencilProcessor {
         final double chroma = (maxChannel - minChannel) / 255;
         final double density = math.max(1 - luminance, chroma * 0.92);
         final double edge = _edgeStrength(gray, width, height, x, y);
-        final double ink = math.min(
-          1,
-          math.max(density, edge * options.edgeBoost),
-        );
+        final double structure = edge * options.edgeBoost;
+        final double ink = structure >= 0.025
+            ? math.min(1, math.max(density, structure))
+            : 0;
         final double inkFactor = _smoothstep(
           options.photoInkThreshold - options.inkSoftness,
           options.photoInkThreshold + options.inkSoftness,
@@ -278,13 +282,13 @@ abstract final class StencilProcessor {
     Uint8List rgba,
     int width,
     int height,
-    StencilOptions options,
-  ) {
+    StencilOptions options, {
+    required bool photoMode,
+  }) {
     final int pixels = width * height;
-    final int minPixels = math.max(
-      options.minComponentPixels,
-      (pixels / 350000).round(),
-    );
+    final int minPixels = photoMode
+        ? math.max(options.photoMinComponentPixels, (pixels * 0.00025).round())
+        : math.max(options.minComponentPixels, (pixels / 350000).round());
     final Uint8List visited = Uint8List(pixels);
     int removed = 0;
 
