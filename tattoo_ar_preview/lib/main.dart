@@ -1,4 +1,6 @@
-import 'package:flutter/foundation.dart' show kReleaseMode;
+import 'dart:ui' show PlatformDispatcher;
+
+import 'package:flutter/foundation.dart' show debugPrint, kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -7,6 +9,10 @@ import 'core/errors/fatal_error_view.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+    debugPrint('SmartStencil uncaught async error: $error\n$stack');
+    return true;
+  };
   if (kReleaseMode) {
     ErrorWidget.builder = (FlutterErrorDetails details) =>
         const FatalErrorView();
