@@ -1,12 +1,13 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import '../../../core/constants/app_constants.dart';
 import '../domain/tattoo_transform.dart';
 
 class InkShaderComposer {
   const InkShaderComposer({required this.program});
 
-  static const double baseSizeFraction = 0.62;
+  static const double baseSizeFraction = AppConstants.inkBaseSizeFraction;
 
   final ui.FragmentProgram program;
 

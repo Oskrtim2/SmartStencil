@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/errors/app_failure.dart';
 
 class TattooDesign {
@@ -29,9 +30,9 @@ class TattooDesign {
 class TattooRepository {
   TattooRepository({ImagePicker? picker}) : _picker = picker ?? ImagePicker();
 
-  static const int maxFileBytes = 25 * 1024 * 1024;
-  static const int maxTextureDimension = 2048;
-  static const int _maxSourceDimension = 12000;
+  static const int maxFileBytes = AppConstants.maxPngFileBytes;
+  static const int maxTextureDimension = AppConstants.maxTattooTextureDimension;
+  static const int _maxSourceDimension = AppConstants.maxPngSourceDimension;
 
   final ImagePicker _picker;
 

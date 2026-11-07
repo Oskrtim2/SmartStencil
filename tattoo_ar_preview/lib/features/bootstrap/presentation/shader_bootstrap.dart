@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../editor/presentation/tattoo_editor_screen.dart';
 
@@ -13,7 +14,7 @@ class ShaderBootstrap extends StatefulWidget {
 }
 
 class _ShaderBootstrapState extends State<ShaderBootstrap> {
-  static const String _shaderAsset = 'shaders/ink_blend.frag';
+  static const String _shaderAsset = AppConstants.shaderAsset;
 
   late Future<ui.FragmentProgram> _programFuture;
 

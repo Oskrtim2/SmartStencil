@@ -3,6 +3,8 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 
+import '../../../core/constants/app_constants.dart';
+
 @immutable
 class TattooTransform {
   const TattooTransform({
@@ -11,9 +13,9 @@ class TattooTransform {
     this.rotation = 0,
   });
 
-  static const double minScale = 0.22;
-  static const double maxScale = 6;
-  static const double maxTranslation = 1.1;
+  static const double minScale = AppConstants.minTattooScale;
+  static const double maxScale = AppConstants.maxTattooScale;
+  static const double maxTranslation = AppConstants.maxTattooTranslation;
 
   final Offset translation;
   final double scale;

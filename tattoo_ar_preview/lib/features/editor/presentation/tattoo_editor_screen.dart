@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/permissions/permission_service.dart';
 import '../../../core/theme/app_theme.dart';
@@ -39,7 +40,9 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
   late final Animation<double> _flashAnimation;
 
   final TattooGestureController _gestures = TattooGestureController();
-  final ValueNotifier<double> _opacity = ValueNotifier<double>(0.82);
+  final ValueNotifier<double> _opacity = ValueNotifier<double>(
+    AppConstants.defaultInkOpacity,
+  );
   final GlobalKey _previewKey = GlobalKey();
   final GlobalKey _scaffoldKey = GlobalKey();
 
@@ -59,7 +62,7 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
 
     _flashController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 420),
+      duration: AppConstants.shutterFlashDuration,
     );
     _flashAnimation = TweenSequence<double>(<TweenSequenceItem<double>>[
       TweenSequenceItem<double>(
@@ -133,7 +136,7 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
               ),
               AnimatedOpacity(
                 opacity: _isCapturing ? 0 : 1,
-                duration: const Duration(milliseconds: 180),
+                duration: AppConstants.chromeFadeDuration,
                 curve: Curves.easeOut,
                 child: IgnorePointer(
                   ignoring: _isCapturing,

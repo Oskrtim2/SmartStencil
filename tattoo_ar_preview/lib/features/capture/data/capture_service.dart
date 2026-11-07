@@ -9,6 +9,7 @@ import 'package:flutter/widgets.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../tattoo/domain/tattoo_transform.dart';
 import '../../tattoo/rendering/ink_shader.dart';
@@ -43,8 +44,8 @@ class CaptureService {
   CaptureService({SharePlus? sharePlus})
     : _sharePlus = sharePlus ?? SharePlus.instance;
 
-  static const double maxOutputLongSide = 2560;
-  static const int _maxCachedCaptures = 5;
+  static const double maxOutputLongSide = AppConstants.maxCaptureLongSide;
+  static const int _maxCachedCaptures = AppConstants.maxCachedCaptures;
 
   final SharePlus _sharePlus;
 
@@ -140,8 +141,14 @@ class CaptureService {
     required double opacity,
     required InkShaderComposer composer,
   }) async {
-    final int width = target.width.round().clamp(1, 4096);
-    final int height = target.height.round().clamp(1, 4096);
+    final int width = target.width.round().clamp(
+      1,
+      AppConstants.maxCaptureDimension,
+    );
+    final int height = target.height.round().clamp(
+      1,
+      AppConstants.maxCaptureDimension,
+    );
     final ui.Size canvasSize = ui.Size(width.toDouble(), height.toDouble());
     final ui.Rect destination = ui.Offset.zero & canvasSize;
     final ui.Rect source = CaptureGeometry.coverSourceRect(
@@ -227,14 +234,16 @@ class CaptureService {
     try {
       final Directory temporary = await getTemporaryDirectory();
       final Directory folder = Directory(
-        '${temporary.path}${Platform.pathSeparator}smartstencil_captures',
+        '${temporary.path}${Platform.pathSeparator}'
+        '${AppConstants.capturesFolderName}',
       );
       if (!await folder.exists()) {
         await folder.create(recursive: true);
       }
       final File file = File(
         '${folder.path}${Platform.pathSeparator}'
-        'smartstencil_${DateTime.now().millisecondsSinceEpoch}.png',
+        '${AppConstants.capturesFilePrefix}'
+        '${DateTime.now().millisecondsSinceEpoch}.png',
       );
       await file.writeAsBytes(bytes, flush: true);
       unawaited(_pruneCaptures(folder));
