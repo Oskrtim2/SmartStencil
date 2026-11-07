@@ -188,6 +188,7 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
           onScaleStart: _handleScaleStart,
           onScaleUpdate: _handleScaleUpdate,
           onScaleEnd: _handleScaleEnd,
+          onDoubleTap: _design == null ? null : _resetTransform,
           child: RepaintBoundary(
             key: _previewKey,
             child: _buildCompositePreview(controller),
