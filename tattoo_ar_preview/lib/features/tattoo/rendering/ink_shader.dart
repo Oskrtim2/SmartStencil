@@ -19,14 +19,22 @@ class InkShaderComposer {
   }) {
     final ui.Size tattooSize = baseSizeFor(image, viewportSize);
     final ui.FragmentShader shader = program.fragmentShader();
-    shader.setFloat(0, viewportSize.width * (0.5 + transform.translation.dx));
-    shader.setFloat(1, viewportSize.height * (0.5 + transform.translation.dy));
-    shader.setFloat(2, math.max(tattooSize.width, 1));
-    shader.setFloat(3, math.max(tattooSize.height, 1));
-    shader.setFloat(4, transform.scale);
-    shader.setFloat(5, transform.rotation);
-    shader.setFloat(6, opacity.clamp(0.0, 1.0));
-    shader.setImageSampler(0, image);
+    shader
+        .getUniformFloat('uCenter', 0)
+        .set(viewportSize.width * (0.5 + transform.translation.dx));
+    shader
+        .getUniformFloat('uCenter', 1)
+        .set(viewportSize.height * (0.5 + transform.translation.dy));
+    shader
+        .getUniformFloat('uTattooSize', 0)
+        .set(math.max(tattooSize.width, 1).toDouble());
+    shader
+        .getUniformFloat('uTattooSize', 1)
+        .set(math.max(tattooSize.height, 1).toDouble());
+    shader.getUniformFloat('uScale').set(transform.scale);
+    shader.getUniformFloat('uRotation').set(transform.rotation);
+    shader.getUniformFloat('uOpacity').set(opacity.clamp(0.0, 1.0).toDouble());
+    shader.getImageSampler('uTexture').set(image);
     return shader;
   }
 
