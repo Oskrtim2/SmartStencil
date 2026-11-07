@@ -56,5 +56,31 @@ void main() {
       expect(CaptureGeometry.fallbackPixelRatio(4), 3);
       expect(CaptureGeometry.fallbackPixelRatio(double.nan), 1.5);
     });
+
+    test('returns zero for invalid maximum dimensions', () {
+      const Size photo = Size(640, 480);
+      const Size viewport = Size(360, 640);
+
+      expect(
+        CaptureGeometry.outputSizeFor(photo, viewport, maxLongSide: 0),
+        Size.zero,
+      );
+      expect(
+        CaptureGeometry.outputSizeFor(photo, viewport, maxLongSide: -10),
+        Size.zero,
+      );
+      expect(
+        CaptureGeometry.outputSizeFor(
+          photo,
+          viewport,
+          maxLongSide: double.infinity,
+        ),
+        Size.zero,
+      );
+      expect(
+        CaptureGeometry.outputSizeFor(photo, viewport, maxLongSide: double.nan),
+        Size.zero,
+      );
+    });
   });
 }

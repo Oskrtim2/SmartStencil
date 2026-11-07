@@ -22,7 +22,10 @@ abstract final class CaptureGeometry {
     Size viewport, {
     double maxLongSide = 2560,
   }) {
-    if (photo.isEmpty || viewport.isEmpty) {
+    if (photo.isEmpty ||
+        viewport.isEmpty ||
+        !maxLongSide.isFinite ||
+        maxLongSide <= 0) {
       return Size.zero;
     }
     final Rect crop = coverSourceRect(photo, viewport.width / viewport.height);
