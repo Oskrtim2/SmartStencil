@@ -100,7 +100,8 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
       unawaited(_cameraSession.initialize());
     } else if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.hidden ||
-        state == AppLifecycleState.paused) {
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
       unawaited(_cameraSession.suspend());
     }
   }
