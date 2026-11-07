@@ -30,6 +30,7 @@ class CameraSession extends ChangeNotifier {
   String? _errorMessage;
   int _generation = 0;
   bool _disposed = false;
+  Future<void>? _initializationFuture;
 
   CameraController? get controller => _controller;
   CameraStatus get status => _status;
@@ -39,7 +40,21 @@ class CameraSession extends ChangeNotifier {
       _status == CameraStatus.ready &&
       (_controller?.value.isInitialized ?? false);
 
-  Future<void> initialize() async {
+  Future<void> initialize() {
+    final Future<void>? existing = _initializationFuture;
+    if (existing != null) {
+      return existing;
+    }
+    final Future<void> future = _initialize();
+    _initializationFuture = future;
+    return future.whenComplete(() {
+      if (identical(_initializationFuture, future)) {
+        _initializationFuture = null;
+      }
+    });
+  }
+
+  Future<void> _initialize() async {
     if (_disposed ||
         _status == CameraStatus.initializing ||
         (_status == CameraStatus.ready && isReady)) {
@@ -189,6 +204,7 @@ class CameraSession extends ChangeNotifier {
 
   Future<void> suspend() async {
     _generation++;
+    _initializationFuture = null;
     final CameraController? controller = _controller;
     _controller = null;
     if (_status == CameraStatus.ready ||
@@ -246,6 +262,7 @@ class CameraSession extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _initializationFuture = null;
     _generation++;
     final CameraController? controller = _controller;
     _controller = null;

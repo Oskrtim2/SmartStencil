@@ -59,6 +59,23 @@ void main() {
       expect(session.controller, isNull);
       session.dispose();
     });
+
+    test('deduplicates concurrent initialization requests', () async {
+      final _ControlledPermissionGateway gateway =
+          _ControlledPermissionGateway();
+      final CameraSession session = CameraSession(gateway);
+
+      final Future<void> first = session.initialize();
+      final Future<void> second = session.initialize();
+      expect(gateway.calls, 1);
+
+      gateway.complete(PermissionDecision.denied);
+      await Future.wait<void>(<Future<void>>[first, second]);
+
+      expect(gateway.calls, 1);
+      expect(session.status, CameraStatus.permissionDenied);
+      session.dispose();
+    });
   });
 }
 
@@ -86,6 +103,28 @@ class _HangingPermissionGateway implements PermissionGateway {
 
   @override
   Future<PermissionDecision> requestCameraAccess() => _completer.future;
+
+  @override
+  Future<void> requestGalleryAccessIfNeeded() async {}
+}
+
+class _ControlledPermissionGateway implements PermissionGateway {
+  final Completer<PermissionDecision> _completer =
+      Completer<PermissionDecision>();
+  int calls = 0;
+
+  @override
+  Future<bool> openSettings() async => true;
+
+  @override
+  Future<PermissionDecision> requestCameraAccess() {
+    calls++;
+    return _completer.future;
+  }
+
+  void complete(PermissionDecision decision) {
+    _completer.complete(decision);
+  }
 
   @override
   Future<void> requestGalleryAccessIfNeeded() async {}
