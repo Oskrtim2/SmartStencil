@@ -50,6 +50,16 @@ void main() {
 
       expect(PngMetadata.tryParse(bytes), isNull);
     });
+
+    test('reports images above the pixel budget', () {
+      final PngMetadata? metadata = PngMetadata.tryParse(
+        buildPng(width: 8000, height: 6000),
+      );
+
+      expect(metadata, isNotNull);
+      expect(metadata!.exceedsPixelBudget(40 * 1000 * 1000), isTrue);
+      expect(metadata.exceedsPixelBudget(48 * 1000 * 1000), isFalse);
+    });
   });
 }
 

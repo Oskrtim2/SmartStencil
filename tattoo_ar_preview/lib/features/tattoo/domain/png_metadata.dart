@@ -28,6 +28,8 @@ class PngMetadata {
 
   int get pixelCount => width * height;
 
+  bool exceedsPixelBudget(int maxPixels) => pixelCount > maxPixels;
+
   bool get hasAlphaChannel => colorType == 4 || colorType == 6;
 
   bool get canContainTransparency => hasAlphaChannel || hasTransparencyChunk;

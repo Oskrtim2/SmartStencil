@@ -87,6 +87,12 @@ class TattooRepository {
         'Las dimensiones del PNG no son compatibles.',
       );
     }
+    if (metadata.exceedsPixelBudget(AppConstants.maxPngPixels)) {
+      throw const TattooImportFailure(
+        'El PNG es demasiado grande para procesarlo con seguridad. '
+        'Usa una imagen de hasta 40 megapíxeles.',
+      );
+    }
     if (!metadata.canContainTransparency) {
       throw const TattooImportFailure(
         'El PNG no incluye canal alfa. Usa un diseño con el fondo '
