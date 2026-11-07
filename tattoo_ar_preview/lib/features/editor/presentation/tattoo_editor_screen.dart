@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/errors/app_failure.dart';
@@ -13,6 +14,7 @@ import '../../camera/data/camera_session.dart';
 import '../../camera/presentation/camera_status_view.dart';
 import '../../camera/presentation/camera_viewfinder.dart';
 import '../../capture/data/capture_service.dart';
+import '../../tattoo/data/stencil_export_service.dart';
 import '../../tattoo/data/tattoo_repository.dart';
 import '../../tattoo/domain/tattoo_gesture_controller.dart';
 import '../../tattoo/presentation/tattoo_ink_mask.dart';
@@ -35,6 +37,7 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
   late final CameraSession _cameraSession;
   late final TattooRepository _tattooRepository;
   late final CaptureService _captureService;
+  late final StencilExportService _stencilExportService;
   late InkShaderComposer _inkComposer;
   late final AnimationController _flashController;
   late final Animation<double> _flashAnimation;
@@ -49,6 +52,7 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
   TattooDesign? _design;
   bool _isPicking = false;
   bool _isCapturing = false;
+  String _processingStage = 'Preparando stencil…';
   Completer<void>? _captureCompleter;
   Size _viewportSize = Size.zero;
 
@@ -59,6 +63,7 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
     _cameraSession = CameraSession(_permissionService);
     _tattooRepository = TattooRepository();
     _captureService = CaptureService();
+    _stencilExportService = StencilExportService();
     _inkComposer = InkShaderComposer(program: widget.inkProgram);
 
     _flashController = AnimationController(
@@ -176,6 +181,7 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
                   child: const ColoredBox(color: Colors.white),
                 ),
               ),
+              if (_isPicking) _ImportProgressOverlay(message: _processingStage),
               if (_isCapturing) const _CaptureProgressOverlay(),
             ],
           ),
@@ -240,6 +246,8 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
           child: EditorTopBar(
             canReset: _design != null,
             onReset: _resetTransform,
+            canShare: _design != null,
+            onShare: _shareStencil,
           ),
         ),
         if (ready)
@@ -285,6 +293,38 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
     unawaited(HapticFeedback.selectionClick());
   }
 
+  Future<void> _shareStencil() async {
+    final TattooDesign? design = _design;
+    if (design == null || _isPicking || _isCapturing) {
+      return;
+    }
+    unawaited(HapticFeedback.selectionClick());
+    final Rect origin = _shareOrigin();
+    try {
+      final ShareResult result = await _stencilExportService.shareStencil(
+        image: design.image,
+        sourceName: design.fileName,
+        sharePositionOrigin: origin,
+      );
+      if (!mounted) {
+        return;
+      }
+      _showMessage(
+        result.status == ShareResultStatus.success
+            ? 'Stencil PNG compartido.'
+            : 'Stencil PNG creado; no se compartió.',
+      );
+    } on StencilExportFailure catch (failure) {
+      if (mounted) {
+        _showMessage(failure.message);
+      }
+    } catch (_) {
+      if (mounted) {
+        _showMessage('No se pudo exportar el stencil.');
+      }
+    }
+  }
+
   Future<void> _recoverLostImport() async {
     try {
       final TattooDesign? design = await _tattooRepository.retrieveLostDesign();
@@ -297,7 +337,7 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
       }
       setState(() => _design = design);
       _gestures.reset();
-      _showMessage('Recuperamos el diseño que estabas importando.');
+      _showMessage(design.processingNote);
     } on TattooImportFailure catch (failure) {
       if (mounted) {
         _showMessage(failure.message);
@@ -311,10 +351,19 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
     if (_isPicking || _isCapturing) {
       return;
     }
-    setState(() => _isPicking = true);
+    setState(() {
+      _isPicking = true;
+      _processingStage = 'Preparando imagen…';
+    });
     try {
       await _permissionService.requestGalleryAccessIfNeeded();
-      final TattooDesign? design = await _tattooRepository.pickTransparentPng();
+      final TattooDesign? design = await _tattooRepository.pickAndConvertDesign(
+        onStage: (String stage) {
+          if (mounted) {
+            setState(() => _processingStage = stage);
+          }
+        },
+      );
       if (!mounted) {
         design?.dispose();
         return;
@@ -327,7 +376,7 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
       setState(() => _design = design);
       _gestures.reset();
       unawaited(HapticFeedback.selectionClick());
-      _showMessage('Diseño importado correctamente.');
+      _showMessage(design.processingNote);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         previous?.dispose();
       });
@@ -451,6 +500,83 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message), action: action));
+  }
+}
+
+class _ImportProgressOverlay extends StatelessWidget {
+  const _ImportProgressOverlay({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return AbsorbPointer(
+      child: ColoredBox(
+        color: Colors.black.withValues(alpha: 0.55),
+        child: Center(
+          child: Semantics(
+            liveRegion: true,
+            label: message,
+            child: ExcludeSemantics(
+              child: Container(
+                width: 290,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 22,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.surface.withValues(alpha: 0.97),
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.1),
+                  ),
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.35),
+                      blurRadius: 28,
+                      offset: const Offset(0, 14),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    const SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.6,
+                        color: AppColors.accent,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        height: 1.35,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Procesando en el dispositivo, sin subir tu imagen.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

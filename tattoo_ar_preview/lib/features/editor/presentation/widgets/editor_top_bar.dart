@@ -8,10 +8,14 @@ class EditorTopBar extends StatelessWidget {
     super.key,
     required this.canReset,
     required this.onReset,
+    required this.canShare,
+    required this.onShare,
   });
 
   final bool canReset;
   final VoidCallback onReset;
+  final bool canShare;
+  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +82,14 @@ class EditorTopBar extends StatelessWidget {
                   ],
                 ),
               ),
+              if (canShare) ...<Widget>[
+                const SizedBox(width: 8),
+                _GlassIconButton(
+                  icon: Icons.ios_share_rounded,
+                  tooltip: 'Compartir stencil PNG',
+                  onPressed: onShare,
+                ),
+              ],
               if (canReset) ...<Widget>[
                 const SizedBox(width: 8),
                 _GlassIconButton(

@@ -172,7 +172,7 @@ class _OpacityControl extends StatelessWidget {
             Text(
               hasDesign
                   ? 'Arrastra, pellizca y gira con dos dedos'
-                  : 'Importa un PNG con transparencia para empezar',
+                  : 'Importa cualquier imagen y la convertimos a stencil',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontSize: 11.5,
                 color: AppColors.textSecondary.withValues(alpha: 0.9),
@@ -203,12 +203,12 @@ class _GalleryButton extends StatelessWidget {
     return Semantics(
       button: true,
       label: hasDesign
-          ? 'Reemplazar diseño PNG'
-          : 'Importar diseño PNG transparente',
+          ? 'Reemplazar imagen y regenerar stencil'
+          : 'Importar imagen y convertir a stencil',
       child: Tooltip(
         message: hasDesign
-            ? 'Reemplazar diseño PNG'
-            : 'Importar diseño PNG transparente',
+            ? 'Reemplazar imagen y regenerar stencil'
+            : 'Importar imagen y convertir a stencil',
         child: FloatingActionButton(
           heroTag: 'smartstencil-gallery',
           onPressed: enabled && !isPicking ? onPressed : null,

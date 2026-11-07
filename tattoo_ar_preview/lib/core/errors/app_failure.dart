@@ -15,3 +15,7 @@ final class TattooImportFailure extends AppFailure {
 final class CaptureFailure extends AppFailure {
   const CaptureFailure(super.message);
 }
+
+final class StencilExportFailure extends AppFailure {
+  const StencilExportFailure(super.message);
+}

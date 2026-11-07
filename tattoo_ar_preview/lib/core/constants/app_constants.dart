@@ -9,6 +9,7 @@ abstract final class AppConstants {
   static const double maxTattooTranslation = 1.1;
 
   static const int maxPngFileBytes = 25 * 1024 * 1024;
+  static const int maxSourceImageBytes = 40 * 1024 * 1024;
   static const int maxPngSourceDimension = 12000;
   static const int maxPngPixels = 40 * 1000 * 1000;
   static const int maxTattooTextureDimension = 2048;
@@ -20,6 +21,8 @@ abstract final class AppConstants {
   static const double minFallbackCapturePixelRatio = 1.5;
   static const String capturesFolderName = 'smartstencil_captures';
   static const String capturesFilePrefix = 'smartstencil_';
+  static const String stencilsFolderName = 'smartstencil_stencils';
+  static const String stencilsFilePrefix = 'smartstencil_stencil_';
 
   static const double minTouchTarget = 48;
   static const Duration chromeFadeDuration = Duration(milliseconds: 180);

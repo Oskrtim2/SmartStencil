@@ -1,24 +1,32 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/errors/app_failure.dart';
-import '../domain/alpha_validator.dart';
 import '../domain/png_metadata.dart';
+import '../processing/background_analysis.dart';
+import '../processing/background_removal_engine.dart';
+import '../processing/stencil_processor.dart';
 
 class TattooDesign {
   TattooDesign({
     required this.image,
     required this.fileName,
     required this.byteSize,
+    required this.generatedWithAi,
+    required this.processingNote,
   });
 
   final ui.Image image;
   final String fileName;
   final int byteSize;
+  final bool generatedWithAi;
+  final String processingNote;
 
   int get width => image.width;
   int get height => image.height;
@@ -29,15 +37,21 @@ class TattooDesign {
 }
 
 class TattooRepository {
-  TattooRepository({ImagePicker? picker}) : _picker = picker ?? ImagePicker();
+  TattooRepository({
+    ImagePicker? picker,
+    BackgroundRemovalEngine? backgroundRemoval,
+  }) : _picker = picker ?? ImagePicker(),
+       _backgroundRemoval = backgroundRemoval ?? OnnxBackgroundRemovalEngine();
 
-  static const int maxFileBytes = AppConstants.maxPngFileBytes;
+  static const int maxFileBytes = AppConstants.maxSourceImageBytes;
   static const int maxTextureDimension = AppConstants.maxTattooTextureDimension;
-  static const int _maxSourceDimension = AppConstants.maxPngSourceDimension;
 
   final ImagePicker _picker;
+  final BackgroundRemovalEngine _backgroundRemoval;
 
-  Future<TattooDesign?> pickTransparentPng() async {
+  Future<TattooDesign?> pickAndConvertDesign({
+    ValueChanged<String>? onStage,
+  }) async {
     final XFile? file;
     try {
       file = await _picker.pickImage(
@@ -54,11 +68,12 @@ class TattooRepository {
     if (file == null) {
       return null;
     }
-
-    return _designFromFile(file);
+    return _designFromFile(file, onStage: onStage);
   }
 
-  Future<TattooDesign?> retrieveLostDesign() async {
+  Future<TattooDesign?> retrieveLostDesign({
+    ValueChanged<String>? onStage,
+  }) async {
     final LostDataResponse response;
     try {
       response = await _picker.retrieveLostData();
@@ -86,125 +101,232 @@ class TattooRepository {
     if (file == null) {
       return null;
     }
-    return _designFromFile(file);
+    return _designFromFile(file, onStage: onStage);
   }
 
-  Future<TattooDesign> _designFromFile(XFile file) async {
+  Future<TattooDesign> _designFromFile(
+    XFile file, {
+    ValueChanged<String>? onStage,
+  }) async {
     final Uint8List bytes;
     try {
       bytes = await file.readAsBytes();
     } catch (_) {
       throw const TattooImportFailure(
-        'No se pudo leer el archivo seleccionado.',
+        'No se pudo leer la imagen seleccionada.',
       );
     }
 
     if (bytes.isEmpty) {
-      throw const TattooImportFailure('El archivo seleccionado está vacío.');
+      throw const TattooImportFailure('La imagen seleccionada está vacía.');
     }
     if (bytes.length > maxFileBytes) {
       throw const TattooImportFailure(
-        'El PNG supera el límite de 25 MB. Elige un diseño más ligero.',
-      );
-    }
-    if (!PngMetadata.hasPngSignature(bytes)) {
-      throw const TattooImportFailure(
-        'El diseño debe ser un archivo PNG con fondo transparente.',
+        'La imagen supera el límite de 40 MB. Elige un archivo más ligero.',
       );
     }
 
-    final PngMetadata? metadata = PngMetadata.tryParse(bytes);
-    if (metadata == null) {
-      throw const TattooImportFailure('El PNG está dañado o no es válido.');
-    }
-    if (metadata.width > _maxSourceDimension ||
-        metadata.height > _maxSourceDimension) {
-      throw const TattooImportFailure(
-        'Las dimensiones del PNG no son compatibles.',
-      );
-    }
-    if (metadata.exceedsPixelBudget(AppConstants.maxPngPixels)) {
-      throw const TattooImportFailure(
-        'El PNG es demasiado grande para procesarlo con seguridad. '
-        'Usa una imagen de hasta 40 megapíxeles.',
-      );
-    }
-    if (!metadata.canContainTransparency) {
-      throw const TattooImportFailure(
-        'El PNG no incluye canal alfa. Usa un diseño con el fondo '
-        'transparente.',
-      );
-    }
+    onStage?.call('Leyendo imagen…');
+    final _DecodedImage decoded = await _decodeImage(bytes);
 
-    final ui.Image image = await _decodeDesign(bytes, metadata);
     try {
-      await _ensureTransparentImage(image);
-    } catch (_) {
-      image.dispose();
-      rethrow;
-    }
+      final bool transparent = _hasMeaningfulTransparency(decoded.rgba);
+      StencilMode mode;
+      int backgroundArgb = 0xFFFFFFFF;
+      bool backgroundIsDark = false;
+      bool generatedWithAi = false;
+      Uint8List workingRgba = decoded.rgba;
+      int workingWidth = decoded.width;
+      int workingHeight = decoded.height;
+      String processingNote;
 
-    return TattooDesign(
-      image: image,
-      fileName: file.name,
-      byteSize: bytes.length,
-    );
+      if (transparent) {
+        mode = StencilMode.transparent;
+        processingNote = 'Diseño transparente convertido a tinta negra.';
+      } else {
+        final BorderAnalysis analysis = BorderAnalysis.analyze(
+          decoded.rgba,
+          decoded.width,
+          decoded.height,
+        );
+        if (analysis.isUniform) {
+          mode = StencilMode.flat;
+          backgroundArgb = analysis.dominantColorArgb;
+          backgroundIsDark = analysis.isDark;
+          processingNote = 'Fondo eliminado automáticamente.';
+        } else {
+          onStage?.call('Eliminando fondo con IA…');
+          await Future<void>.delayed(const Duration(milliseconds: 40));
+          final Uint8List pngBytes = await _encodePng(decoded.image);
+          final BackgroundCutout? cutout = await _backgroundRemoval
+              .removeBackground(pngBytes);
+          if (cutout != null) {
+            mode = StencilMode.ai;
+            generatedWithAi = true;
+            workingRgba = cutout.rgba;
+            workingWidth = cutout.width;
+            workingHeight = cutout.height;
+            processingNote = 'Fondo eliminado con IA.';
+          } else {
+            mode = StencilMode.full;
+            processingNote =
+                'Stencil generado; la IA no estaba disponible en este '
+                'dispositivo.';
+          }
+        }
+      }
+
+      onStage?.call('Generando stencil transparente…');
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+
+      final StencilResult result = await compute(
+        processStencilInIsolate,
+        StencilRequest(
+          rgba: workingRgba,
+          width: workingWidth,
+          height: workingHeight,
+          mode: mode,
+          backgroundArgb: backgroundArgb,
+          backgroundIsDark: backgroundIsDark,
+        ),
+      );
+
+      if (result.isEmpty) {
+        throw const TattooImportFailure(
+          'No se detectó tinta en la imagen. Prueba con otro diseño.',
+        );
+      }
+
+      final ui.Image stencil = await _rgbaToImage(
+        result.rgba,
+        result.width,
+        result.height,
+      );
+
+      return TattooDesign(
+        image: stencil,
+        fileName: file.name,
+        byteSize: bytes.length,
+        generatedWithAi: generatedWithAi,
+        processingNote: processingNote,
+      );
+    } on TattooImportFailure {
+      rethrow;
+    } catch (error) {
+      debugPrint('SmartStencil: stencil conversion failed: $error');
+      throw const TattooImportFailure(
+        'No se pudo convertir la imagen a un stencil transparente.',
+      );
+    } finally {
+      decoded.image.dispose();
+    }
   }
 
   static bool hasPngSignature(Uint8List bytes) {
     return PngMetadata.hasPngSignature(bytes);
   }
 
-  Future<void> _ensureTransparentImage(ui.Image image) async {
-    final ByteData? data = await image.toByteData(
-      format: ui.ImageByteFormat.rawRgba,
-    );
-    if (data == null) {
-      throw const TattooImportFailure(
-        'No se pudo verificar la transparencia del PNG.',
-      );
-    }
-    final Uint8List pixels = data.buffer.asUint8List(
-      data.offsetInBytes,
-      data.lengthInBytes,
-    );
-    if (!AlphaValidator.hasTransparentPixel(pixels)) {
-      throw const TattooImportFailure(
-        'El PNG no contiene zonas transparentes. Usa un diseño con el '
-        'fondo transparente.',
-      );
-    }
-  }
-
-  Future<ui.Image> _decodeDesign(Uint8List bytes, PngMetadata metadata) async {
-    int? targetWidth;
-    int? targetHeight;
-    final int longestSide = math.max(metadata.width, metadata.height);
-    if (longestSide > maxTextureDimension) {
-      if (metadata.width >= metadata.height) {
-        targetWidth = maxTextureDimension;
-      } else {
-        targetHeight = maxTextureDimension;
-      }
-    }
-
+  Future<_DecodedImage> _decodeImage(Uint8List bytes) async {
+    ui.ImmutableBuffer? buffer;
+    ui.ImageDescriptor? descriptor;
     ui.Codec? codec;
     try {
-      codec = await ui.instantiateImageCodec(
-        bytes,
+      buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
+      descriptor = await ui.ImageDescriptor.encoded(buffer);
+      int? targetWidth;
+      int? targetHeight;
+      final int longestSide = math.max(descriptor.width, descriptor.height);
+      if (longestSide > maxTextureDimension) {
+        if (descriptor.width >= descriptor.height) {
+          targetWidth = maxTextureDimension;
+        } else {
+          targetHeight = maxTextureDimension;
+        }
+      }
+
+      codec = await descriptor.instantiateCodec(
         targetWidth: targetWidth,
         targetHeight: targetHeight,
-        allowUpscaling: false,
       );
       final ui.FrameInfo frame = await codec.getNextFrame();
-      return frame.image;
-    } catch (_) {
+      final ui.Image image = frame.image;
+      final ByteData? data = await image.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
+      if (data == null) {
+        image.dispose();
+        throw const TattooImportFailure(
+          'No se pudo leer los píxeles de la imagen.',
+        );
+      }
+      final Uint8List rgba = Uint8List.fromList(
+        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+      );
+      return _DecodedImage(
+        image: image,
+        rgba: rgba,
+        width: image.width,
+        height: image.height,
+      );
+    } on TattooImportFailure {
+      rethrow;
+    } catch (error) {
+      debugPrint('SmartStencil: image decode failed: $error');
       throw const TattooImportFailure(
-        'No se pudo decodificar el PNG seleccionado.',
+        'No se pudo decodificar la imagen. Prueba con JPG, PNG, WebP o HEIC.',
       );
     } finally {
       codec?.dispose();
+      descriptor?.dispose();
+      buffer?.dispose();
     }
+  }
+
+  Future<Uint8List> _encodePng(ui.Image image) async {
+    final ByteData? data = await image.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
+    if (data == null) {
+      throw const TattooImportFailure(
+        'No se pudo preparar la imagen para la IA.',
+      );
+    }
+    return Uint8List.fromList(
+      data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+    );
+  }
+
+  Future<ui.Image> _rgbaToImage(Uint8List rgba, int width, int height) {
+    final Completer<ui.Image> completer = Completer<ui.Image>();
+    try {
+      ui.decodeImageFromPixels(rgba, width, height, ui.PixelFormat.rgba8888, (
+        ui.Image image,
+      ) {
+        if (!completer.isCompleted) {
+          completer.complete(image);
+        }
+      });
+    } catch (error, stackTrace) {
+      if (!completer.isCompleted) {
+        completer.completeError(error, stackTrace);
+      }
+    }
+    return completer.future;
+  }
+
+  bool _hasMeaningfulTransparency(Uint8List rgba) {
+    final int pixels = rgba.length ~/ 4;
+    final int minimum = math.max(50, pixels ~/ 500);
+    int transparent = 0;
+    for (int index = 3; index < rgba.length; index += 4) {
+      if (rgba[index] < 250) {
+        transparent++;
+        if (transparent >= minimum) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   bool _isPermissionError(PlatformException error) {
@@ -225,4 +347,18 @@ class TattooRepository {
     }
     return 'No se pudo abrir la galería. Inténtalo de nuevo.';
   }
+}
+
+class _DecodedImage {
+  const _DecodedImage({
+    required this.image,
+    required this.rgba,
+    required this.width,
+    required this.height,
+  });
+
+  final ui.Image image;
+  final Uint8List rgba;
+  final int width;
+  final int height;
 }
