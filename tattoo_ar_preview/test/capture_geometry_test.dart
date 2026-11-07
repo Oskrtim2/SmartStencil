@@ -82,5 +82,29 @@ void main() {
         Size.zero,
       );
     });
+
+    test('handles extremely tall photos in landscape viewports', () {
+      final Size output = CaptureGeometry.outputSizeFor(
+        const Size(1000, 8000),
+        const Size(1920, 1080),
+        maxLongSide: 2560,
+      );
+
+      expect(output.width / output.height, closeTo(1920 / 1080, 1e-9));
+      expect(output.height, closeTo(562.5, 1e-9));
+      expect(output.width, 1000);
+    });
+
+    test('handles panoramic photos in portrait viewports', () {
+      final Size output = CaptureGeometry.outputSizeFor(
+        const Size(8000, 1000),
+        const Size(1080, 1920),
+        maxLongSide: 2560,
+      );
+
+      expect(output.width / output.height, closeTo(1080 / 1920, 1e-9));
+      expect(output.width, closeTo(562.5, 1e-9));
+      expect(output.height, 1000);
+    });
   });
 }
