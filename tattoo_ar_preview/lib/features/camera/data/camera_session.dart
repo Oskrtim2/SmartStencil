@@ -98,6 +98,11 @@ class CameraSession extends ChangeNotifier {
       }
 
       _controller = pending;
+      pending.addListener(_onControllerChanged);
+      if (pending.value.hasError) {
+        _onControllerChanged();
+        return;
+      }
       _finish(CameraStatus.ready);
     } on CameraException catch (error) {
       await _disposePending(pending);
@@ -131,6 +136,30 @@ class CameraSession extends ChangeNotifier {
     });
   }
 
+  void _onControllerChanged() {
+    final CameraController? controller = _controller;
+    if (_disposed || controller == null || !controller.value.hasError) {
+      return;
+    }
+    _generation++;
+    _controller = null;
+    _status = CameraStatus.failure;
+    _errorMessage =
+        controller.value.errorDescription ??
+        'La cámara dejó de responder. Inténtalo de nuevo.';
+    _notify();
+    unawaited(_disposeController(controller));
+  }
+
+  Future<void> _disposeController(CameraController controller) async {
+    controller.removeListener(_onControllerChanged);
+    try {
+      await controller.dispose();
+    } catch (_) {
+      return;
+    }
+  }
+
   Future<void> _trySetting(Future<void> Function() action) async {
     try {
       await action();
@@ -151,7 +180,7 @@ class CameraSession extends ChangeNotifier {
     }
     if (controller != null) {
       try {
-        await controller.dispose();
+        await _disposeController(controller);
       } catch (_) {
         _controller = null;
       }
@@ -180,11 +209,7 @@ class CameraSession extends ChangeNotifier {
     if (controller == null || identical(controller, _controller)) {
       return;
     }
-    try {
-      await controller.dispose();
-    } catch (_) {
-      return;
-    }
+    await _disposeController(controller);
   }
 
   String _cameraErrorMessage(CameraException error) {
@@ -206,7 +231,7 @@ class CameraSession extends ChangeNotifier {
     final CameraController? controller = _controller;
     _controller = null;
     if (controller != null) {
-      unawaited(controller.dispose());
+      unawaited(_disposeController(controller));
     }
     super.dispose();
   }
