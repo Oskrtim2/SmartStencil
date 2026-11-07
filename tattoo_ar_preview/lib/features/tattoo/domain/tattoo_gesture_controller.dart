@@ -12,11 +12,16 @@ class TattooGestureController extends ChangeNotifier {
   double _lastGestureRotation = 0;
   Offset _lastFocalPoint = Offset.zero;
   int _lastPointerCount = 0;
+  bool _baselineDirty = false;
 
   TattooTransform get transform => _transform;
 
   void updateViewport(Size size) {
+    if (size == _viewportSize) {
+      return;
+    }
     _viewportSize = size;
+    _baselineDirty = true;
   }
 
   void onScaleStart(ScaleStartDetails details) {
@@ -24,13 +29,15 @@ class TattooGestureController extends ChangeNotifier {
     _lastGestureRotation = 0;
     _lastFocalPoint = details.localFocalPoint;
     _lastPointerCount = details.pointerCount;
+    _baselineDirty = false;
   }
 
   void onScaleUpdate(ScaleUpdateDetails details) {
     if (_viewportSize.isEmpty) {
       return;
     }
-    if (details.pointerCount != _lastPointerCount) {
+    if (_baselineDirty || details.pointerCount != _lastPointerCount) {
+      _baselineDirty = false;
       _lastPointerCount = details.pointerCount;
       _lastGestureScale = details.scale;
       _lastGestureRotation = details.rotation;
@@ -79,6 +86,7 @@ class TattooGestureController extends ChangeNotifier {
     _lastGestureRotation = 0;
     _lastFocalPoint = Offset.zero;
     _lastPointerCount = 0;
+    _baselineDirty = false;
   }
 
   void reset() {

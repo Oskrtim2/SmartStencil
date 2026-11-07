@@ -161,5 +161,30 @@ void main() {
       expect(controller.transform.rotation, closeTo(0.1, 1e-9));
       controller.dispose();
     });
+
+    test('rebases the gesture when the viewport changes', () {
+      final TattooGestureController controller = TattooGestureController()
+        ..updateViewport(const Size(100, 100));
+
+      controller.onScaleStart(
+        ScaleStartDetails(localFocalPoint: const Offset(50, 50)),
+      );
+      controller.onScaleUpdate(
+        ScaleUpdateDetails(localFocalPoint: const Offset(50, 50), scale: 2),
+      );
+      expect(controller.transform.scale, 2);
+
+      controller.updateViewport(const Size(200, 200));
+      controller.onScaleUpdate(
+        ScaleUpdateDetails(localFocalPoint: const Offset(50, 50), scale: 2.5),
+      );
+      expect(controller.transform.scale, 2);
+
+      controller.onScaleUpdate(
+        ScaleUpdateDetails(localFocalPoint: const Offset(50, 50), scale: 2.75),
+      );
+      expect(controller.transform.scale, closeTo(2.2, 1e-9));
+      controller.dispose();
+    });
   });
 }
