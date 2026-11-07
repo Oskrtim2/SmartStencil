@@ -26,6 +26,17 @@ class CaptureResult {
   final String filePath;
   final ShareResult shareResult;
   final CaptureSource source;
+
+  String get userMessage {
+    switch (shareResult.status) {
+      case ShareResultStatus.success:
+        return 'Captura compartida.';
+      case ShareResultStatus.dismissed:
+        return 'Captura creada, pero no se compartió.';
+      case ShareResultStatus.unavailable:
+        return 'Captura creada en la caché de SmartStencil.';
+    }
+  }
 }
 
 class CaptureService {

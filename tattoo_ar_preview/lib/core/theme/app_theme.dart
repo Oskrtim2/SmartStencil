@@ -13,19 +13,20 @@ abstract final class AppColors {
 
 abstract final class AppTheme {
   static ThemeData get dark {
-    final ColorScheme scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.accent,
-      brightness: Brightness.dark,
-    ).copyWith(
-      primary: AppColors.accent,
-      onPrimary: AppColors.background,
-      secondary: AppColors.accent,
-      onSecondary: AppColors.background,
-      surface: AppColors.surface,
-      onSurface: AppColors.textPrimary,
-      error: AppColors.danger,
-      onError: AppColors.background,
-    );
+    final ColorScheme scheme =
+        ColorScheme.fromSeed(
+          seedColor: AppColors.accent,
+          brightness: Brightness.dark,
+        ).copyWith(
+          primary: AppColors.accent,
+          onPrimary: AppColors.background,
+          secondary: AppColors.accent,
+          onSecondary: AppColors.background,
+          surface: AppColors.surface,
+          onSurface: AppColors.textPrimary,
+          error: AppColors.danger,
+          onError: AppColors.background,
+        );
 
     final ThemeData base = ThemeData(
       useMaterial3: true,
@@ -98,10 +99,7 @@ abstract final class AppTheme {
           color: AppColors.surfaceHigh,
           borderRadius: BorderRadius.circular(10),
         ),
-        textStyle: const TextStyle(
-          color: AppColors.textPrimary,
-          fontSize: 12,
-        ),
+        textStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 12),
       ),
     );
   }

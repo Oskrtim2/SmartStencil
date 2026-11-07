@@ -35,7 +35,9 @@ class CameraSession extends ChangeNotifier {
       (_controller?.value.isInitialized ?? false);
 
   Future<void> initialize() async {
-    if (_disposed || _status == CameraStatus.initializing) {
+    if (_disposed ||
+        _status == CameraStatus.initializing ||
+        (_status == CameraStatus.ready && isReady)) {
       return;
     }
 

@@ -8,20 +8,10 @@ sealed class AppFailure implements Exception {
   String toString() => '$runtimeType: $message';
 }
 
-final class CameraPermissionFailure extends AppFailure {
-  const CameraPermissionFailure(
-    String message, {
-    bool canOpenSettings = false,
-  }) : super(message, canOpenSettings: canOpenSettings);
-}
-
 final class TattooImportFailure extends AppFailure {
-  const TattooImportFailure(
-    String message, {
-    bool canOpenSettings = false,
-  }) : super(message, canOpenSettings: canOpenSettings);
+  const TattooImportFailure(super.message, {super.canOpenSettings});
 }
 
 final class CaptureFailure extends AppFailure {
-  const CaptureFailure(String message) : super(message);
+  const CaptureFailure(super.message);
 }

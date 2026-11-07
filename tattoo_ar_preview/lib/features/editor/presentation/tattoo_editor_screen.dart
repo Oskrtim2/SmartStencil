@@ -37,9 +37,6 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
   late final InkShaderComposer _inkComposer;
   late final AnimationController _flashController;
   late final Animation<double> _flashAnimation;
-  late final AnimationController _focusController;
-  late final Animation<double> _focusScale;
-  late final Animation<double> _focusFade;
 
   final TattooGestureController _gestures = TattooGestureController();
   final ValueNotifier<double> _opacity = ValueNotifier<double>(0.82);
@@ -50,7 +47,6 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
   bool _isPicking = false;
   bool _isCapturing = false;
   Size _viewportSize = Size.zero;
-  Offset? _focusPoint;
 
   @override
   void initState() {
@@ -82,20 +78,6 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
       ),
     ]).animate(_flashController);
 
-    _focusController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 750),
-    );
-    _focusScale = Tween<double>(begin: 1.5, end: 1).animate(
-      CurvedAnimation(parent: _focusController, curve: Curves.easeOutCubic),
-    );
-    _focusFade = Tween<double>(begin: 1, end: 0).animate(
-      CurvedAnimation(
-        parent: _focusController,
-        curve: const Interval(0.4, 1, curve: Curves.easeOut),
-      ),
-    );
-
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -126,7 +108,6 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
     _opacity.dispose();
     _gestures.dispose();
     _flashController.dispose();
-    _focusController.dispose();
     super.dispose();
   }
 
@@ -192,41 +173,9 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
           behavior: HitTestBehavior.opaque,
           onScaleStart: _handleScaleStart,
           onScaleUpdate: _handleScaleUpdate,
-          onScaleEnd: _handleScaleEnd,
-          onTapUp: _handleTapFocus,
-          child: Stack(
-            fit: StackFit.expand,
-            children: <Widget>[
-              RepaintBoundary(
-                key: _previewKey,
-                child: _buildCompositePreview(controller),
-              ),
-              if (_focusPoint != null)
-                Positioned(
-                  left: _focusPoint!.dx - 34,
-                  top: _focusPoint!.dy - 34,
-                  child: IgnorePointer(
-                    child: FadeTransition(
-                      opacity: _focusFade,
-                      child: ScaleTransition(
-                        scale: _focusScale,
-                        child: Container(
-                          width: 68,
-                          height: 68,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.accent.withValues(alpha: 0.08),
-                            border: Border.all(
-                              color: AppColors.accent,
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+          child: RepaintBoundary(
+            key: _previewKey,
+            child: _buildCompositePreview(controller),
           ),
         );
       },
@@ -293,48 +242,6 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
       return;
     }
     _gestures.onScaleUpdate(details);
-  }
-
-  void _handleScaleEnd(ScaleEndDetails details) {
-    if (_isCapturing) {
-      return;
-    }
-  }
-
-  Future<void> _handleTapFocus(TapUpDetails details) async {
-    if (_isCapturing || _design == null) {
-      return;
-    }
-    final CameraController? controller = _cameraSession.controller;
-    if (controller == null || !controller.value.isInitialized) {
-      return;
-    }
-    final Size viewport = _viewportSize;
-    if (viewport.isEmpty) {
-      return;
-    }
-
-    final double x = (details.localPosition.dx / viewport.width).clamp(
-      0.0,
-      1.0,
-    );
-    final double y = (details.localPosition.dy / viewport.height).clamp(
-      0.0,
-      1.0,
-    );
-    setState(() => _focusPoint = details.localPosition);
-    _focusController.forward(from: 0);
-
-    try {
-      if (controller.value.focusPointSupported) {
-        await controller.setFocusPoint(Offset(x, y));
-      }
-      if (controller.value.exposurePointSupported) {
-        await controller.setExposurePoint(Offset(x, y));
-      }
-    } catch (_) {
-      return;
-    }
   }
 
   void _resetTransform() {
@@ -407,11 +314,7 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
     final Rect shareOrigin = _shareOrigin();
 
     HapticFeedback.mediumImpact();
-    _focusController.reset();
-    setState(() {
-      _isCapturing = true;
-      _focusPoint = null;
-    });
+    setState(() => _isCapturing = true);
     _flashController.forward(from: 0);
     await WidgetsBinding.instance.endOfFrame;
 
