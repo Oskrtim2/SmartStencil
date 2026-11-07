@@ -3,9 +3,18 @@ import 'package:permission_handler/permission_handler.dart';
 
 enum PermissionDecision { granted, denied, permanentlyDenied }
 
-class PermissionService {
+abstract interface class PermissionGateway {
+  Future<PermissionDecision> requestCameraAccess();
+
+  Future<void> requestGalleryAccessIfNeeded();
+
+  Future<bool> openSettings();
+}
+
+class PermissionService implements PermissionGateway {
   const PermissionService();
 
+  @override
   Future<PermissionDecision> requestCameraAccess() async {
     final PermissionStatus current = await Permission.camera.status;
     if (current.isGranted || current.isLimited) {
@@ -25,6 +34,7 @@ class PermissionService {
     return PermissionDecision.denied;
   }
 
+  @override
   Future<void> requestGalleryAccessIfNeeded() async {
     if (defaultTargetPlatform != TargetPlatform.iOS) {
       return;
@@ -36,5 +46,6 @@ class PermissionService {
     await Permission.photos.request();
   }
 
+  @override
   Future<bool> openSettings() => openAppSettings();
 }

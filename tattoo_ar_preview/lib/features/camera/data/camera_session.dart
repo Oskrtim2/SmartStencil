@@ -18,7 +18,7 @@ enum CameraStatus {
 class CameraSession extends ChangeNotifier {
   CameraSession(this._permissionService);
 
-  final PermissionService _permissionService;
+  final PermissionGateway _permissionService;
 
   CameraController? _controller;
   CameraStatus _status = CameraStatus.idle;

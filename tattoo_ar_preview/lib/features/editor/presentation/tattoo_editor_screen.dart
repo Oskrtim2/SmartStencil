@@ -31,7 +31,7 @@ class TattooEditorScreen extends StatefulWidget {
 
 class _TattooEditorScreenState extends State<TattooEditorScreen>
     with WidgetsBindingObserver, TickerProviderStateMixin {
-  late final PermissionService _permissionService;
+  late final PermissionGateway _permissionService;
   late final CameraSession _cameraSession;
   late final TattooRepository _tattooRepository;
   late final CaptureService _captureService;
