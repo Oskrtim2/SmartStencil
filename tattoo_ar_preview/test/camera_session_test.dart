@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tattoo_ar_preview/core/permissions/permission_service.dart';
 import 'package:tattoo_ar_preview/features/camera/data/camera_session.dart';
@@ -43,6 +45,20 @@ void main() {
       expect(session.status, CameraStatus.permissionPermanentlyDenied);
       session.dispose();
     });
+
+    test('fails gracefully when permission request times out', () async {
+      final CameraSession session = CameraSession(
+        _HangingPermissionGateway(),
+        initializationTimeout: const Duration(milliseconds: 20),
+      );
+
+      await session.initialize();
+
+      expect(session.status, CameraStatus.failure);
+      expect(session.errorMessage, contains('tardó demasiado'));
+      expect(session.controller, isNull);
+      session.dispose();
+    });
   });
 }
 
@@ -56,6 +72,20 @@ class _FakePermissionGateway implements PermissionGateway {
 
   @override
   Future<PermissionDecision> requestCameraAccess() async => decision;
+
+  @override
+  Future<void> requestGalleryAccessIfNeeded() async {}
+}
+
+class _HangingPermissionGateway implements PermissionGateway {
+  final Completer<PermissionDecision> _completer =
+      Completer<PermissionDecision>();
+
+  @override
+  Future<bool> openSettings() async => true;
+
+  @override
+  Future<PermissionDecision> requestCameraAccess() => _completer.future;
 
   @override
   Future<void> requestGalleryAccessIfNeeded() async {}

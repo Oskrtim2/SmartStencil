@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/permissions/permission_service.dart';
 
 enum CameraStatus {
@@ -16,9 +17,13 @@ enum CameraStatus {
 }
 
 class CameraSession extends ChangeNotifier {
-  CameraSession(this._permissionService);
+  CameraSession(
+    this._permissionService, {
+    this.initializationTimeout = AppConstants.cameraInitializationTimeout,
+  });
 
   final PermissionGateway _permissionService;
+  final Duration initializationTimeout;
 
   CameraController? _controller;
   CameraStatus _status = CameraStatus.idle;
@@ -49,7 +54,8 @@ class CameraSession extends ChangeNotifier {
     CameraController? pending;
     try {
       final PermissionDecision decision = await _permissionService
-          .requestCameraAccess();
+          .requestCameraAccess()
+          .timeout(initializationTimeout);
       if (generation != _generation) {
         return;
       }
@@ -62,7 +68,9 @@ class CameraSession extends ChangeNotifier {
         return;
       }
 
-      final List<CameraDescription> cameras = await availableCameras();
+      final List<CameraDescription> cameras = await availableCameras().timeout(
+        initializationTimeout,
+      );
       if (generation != _generation) {
         return;
       }
@@ -85,13 +93,13 @@ class CameraSession extends ChangeNotifier {
         enableAudio: false,
         imageFormatGroup: ImageFormatGroup.jpeg,
       );
-      await pending.initialize();
+      await pending.initialize().timeout(initializationTimeout);
       if (generation != _generation) {
         await pending.dispose();
         return;
       }
 
-      await _configure(pending);
+      await _configure(pending).timeout(initializationTimeout);
       if (generation != _generation) {
         await pending.dispose();
         return;
@@ -104,6 +112,17 @@ class CameraSession extends ChangeNotifier {
         return;
       }
       _finish(CameraStatus.ready);
+    } on TimeoutException {
+      await _disposePending(pending);
+      if (generation != _generation) {
+        return;
+      }
+      _controller = null;
+      _finish(
+        CameraStatus.failure,
+        'La cámara tardó demasiado en responder. Cierra otras apps que '
+        'puedan estar usándola y vuelve a intentarlo.',
+      );
     } on CameraException catch (error) {
       await _disposePending(pending);
       if (generation != _generation) {
