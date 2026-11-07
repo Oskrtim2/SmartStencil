@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
@@ -7,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/errors/app_failure.dart';
+import '../domain/png_metadata.dart';
 
 class TattooDesign {
   TattooDesign({
@@ -71,25 +71,23 @@ class TattooRepository {
         'El PNG supera el límite de 25 MB. Elige un diseño más ligero.',
       );
     }
-    if (!hasPngSignature(bytes)) {
+    if (!PngMetadata.hasPngSignature(bytes)) {
       throw const TattooImportFailure(
         'El diseño debe ser un archivo PNG con fondo transparente.',
       );
     }
 
-    final _PngHeader? header = _PngHeader.tryParse(bytes);
-    if (header == null) {
+    final PngMetadata? metadata = PngMetadata.tryParse(bytes);
+    if (metadata == null) {
       throw const TattooImportFailure('El PNG está dañado o no es válido.');
     }
-    if (header.width <= 0 ||
-        header.height <= 0 ||
-        header.width > _maxSourceDimension ||
-        header.height > _maxSourceDimension) {
+    if (metadata.width > _maxSourceDimension ||
+        metadata.height > _maxSourceDimension) {
       throw const TattooImportFailure(
         'Las dimensiones del PNG no son compatibles.',
       );
     }
-    if (!header.hasAlpha && !_hasTransparencyChunk(bytes)) {
+    if (!metadata.canContainTransparency) {
       throw const TattooImportFailure(
         'El PNG no incluye canal alfa. Usa un diseño con el fondo '
         'transparente.',
@@ -97,7 +95,7 @@ class TattooRepository {
     }
 
     await _ensureTransparentPixels(bytes);
-    final ui.Image image = await _decodeDesign(bytes, header);
+    final ui.Image image = await _decodeDesign(bytes, metadata);
 
     return TattooDesign(
       image: image,
@@ -107,25 +105,7 @@ class TattooRepository {
   }
 
   static bool hasPngSignature(Uint8List bytes) {
-    const List<int> signature = <int>[
-      0x89,
-      0x50,
-      0x4E,
-      0x47,
-      0x0D,
-      0x0A,
-      0x1A,
-      0x0A,
-    ];
-    if (bytes.length < signature.length) {
-      return false;
-    }
-    for (int index = 0; index < signature.length; index++) {
-      if (bytes[index] != signature[index]) {
-        return false;
-      }
-    }
-    return true;
+    return PngMetadata.hasPngSignature(bytes);
   }
 
   Future<void> _ensureTransparentPixels(Uint8List bytes) async {
@@ -174,12 +154,12 @@ class TattooRepository {
     }
   }
 
-  Future<ui.Image> _decodeDesign(Uint8List bytes, _PngHeader header) async {
+  Future<ui.Image> _decodeDesign(Uint8List bytes, PngMetadata metadata) async {
     int? targetWidth;
     int? targetHeight;
-    final int longestSide = math.max(header.width, header.height);
+    final int longestSide = math.max(metadata.width, metadata.height);
     if (longestSide > maxTextureDimension) {
-      if (header.width >= header.height) {
+      if (metadata.width >= metadata.height) {
         targetWidth = maxTextureDimension;
       } else {
         targetHeight = maxTextureDimension;
@@ -205,31 +185,6 @@ class TattooRepository {
     }
   }
 
-  bool _hasTransparencyChunk(Uint8List bytes) {
-    if (bytes.length < 8) {
-      return false;
-    }
-    final ByteData data = ByteData.sublistView(bytes);
-    int offset = 8;
-    while (offset + 12 <= bytes.length) {
-      final int chunkLength = data.getUint32(offset, Endian.big);
-      if (offset + 12 + chunkLength > bytes.length) {
-        return false;
-      }
-      final String chunkType = String.fromCharCodes(
-        bytes.sublist(offset + 4, offset + 8),
-      );
-      if (chunkType == 'tRNS') {
-        return true;
-      }
-      if (chunkType == 'IDAT') {
-        return false;
-      }
-      offset += 12 + chunkLength;
-    }
-    return false;
-  }
-
   bool _isPermissionError(PlatformException error) {
     final String code = error.code.toLowerCase();
     final String message = (error.message ?? '').toLowerCase();
@@ -247,39 +202,5 @@ class TattooRepository {
       return 'El selector de fotos ya está abierto.';
     }
     return 'No se pudo abrir la galería. Inténtalo de nuevo.';
-  }
-}
-
-class _PngHeader {
-  const _PngHeader({
-    required this.width,
-    required this.height,
-    required this.colorType,
-  });
-
-  final int width;
-  final int height;
-  final int colorType;
-
-  bool get hasAlpha => colorType == 4 || colorType == 6;
-
-  static _PngHeader? tryParse(Uint8List bytes) {
-    if (bytes.length < 33 || !TattooRepository.hasPngSignature(bytes)) {
-      return null;
-    }
-    final ByteData data = ByteData.sublistView(bytes);
-    if (data.getUint32(8, Endian.big) != 13) {
-      return null;
-    }
-    if (String.fromCharCodes(bytes.sublist(12, 16)) != 'IHDR') {
-      return null;
-    }
-    final int width = data.getUint32(16, Endian.big);
-    final int height = data.getUint32(20, Endian.big);
-    final int colorType = bytes[25];
-    if (width == 0 || height == 0) {
-      return null;
-    }
-    return _PngHeader(width: width, height: height, colorType: colorType);
   }
 }
