@@ -149,7 +149,9 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
               ),
               AnimatedOpacity(
                 opacity: _isCapturing ? 0 : 1,
-                duration: AppConstants.chromeFadeDuration,
+                duration: _isCapturing
+                    ? Duration.zero
+                    : AppConstants.chromeFadeDuration,
                 curve: Curves.easeOut,
                 child: IgnorePointer(
                   ignoring: _isCapturing,
