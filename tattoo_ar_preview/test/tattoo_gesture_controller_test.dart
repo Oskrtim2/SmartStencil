@@ -71,6 +71,27 @@ void main() {
       controller.dispose();
     });
 
+    test('ending a gesture preserves the current transform', () {
+      final TattooGestureController controller = TattooGestureController()
+        ..updateViewport(const Size(100, 100));
+
+      controller.onScaleStart(
+        ScaleStartDetails(localFocalPoint: const Offset(50, 50)),
+      );
+      controller.onScaleUpdate(
+        ScaleUpdateDetails(
+          localFocalPoint: const Offset(50, 50),
+          scale: 2,
+          rotation: 0.3,
+        ),
+      );
+      final TattooTransform beforeEnd = controller.transform;
+      controller.onScaleEnd();
+
+      expect(controller.transform, beforeEnd);
+      controller.dispose();
+    });
+
     test('reduces scale immediately after reaching the maximum bound', () {
       final TattooGestureController controller = TattooGestureController()
         ..updateViewport(const Size(100, 100));

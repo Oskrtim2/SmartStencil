@@ -187,6 +187,7 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
           behavior: HitTestBehavior.opaque,
           onScaleStart: _handleScaleStart,
           onScaleUpdate: _handleScaleUpdate,
+          onScaleEnd: _handleScaleEnd,
           child: RepaintBoundary(
             key: _previewKey,
             child: _buildCompositePreview(controller),
@@ -256,6 +257,10 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
       return;
     }
     _gestures.onScaleUpdate(details);
+  }
+
+  void _handleScaleEnd(ScaleEndDetails details) {
+    _gestures.onScaleEnd();
   }
 
   void _resetTransform() {

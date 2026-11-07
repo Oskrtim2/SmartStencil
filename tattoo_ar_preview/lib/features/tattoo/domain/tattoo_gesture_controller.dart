@@ -74,6 +74,13 @@ class TattooGestureController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void onScaleEnd() {
+    _lastGestureScale = 1;
+    _lastGestureRotation = 0;
+    _lastFocalPoint = Offset.zero;
+    _lastPointerCount = 0;
+  }
+
   void reset() {
     if (_transform == const TattooTransform()) {
       return;
