@@ -7,7 +7,13 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Tattoo Ar Preview</string>
+	<string>SmartStencil</string>
+	<key>NSCameraUsageDescription</key>
+	<string>SmartStencil usa la cámara trasera para previsualizar tatuajes sobre la piel en tiempo real.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>SmartStencil necesita acceso a tus fotos para importar diseños de tatuaje PNG con transparencia.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>SmartStencil guarda capturas de tus pruebas de tatuaje en la galería si decides hacerlo.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
