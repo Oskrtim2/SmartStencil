@@ -143,11 +143,15 @@ class _OpacityControl extends StatelessWidget {
                   color: AppColors.accent,
                 ),
                 const SizedBox(width: 7),
-                Text(
-                  'Intensidad del tinte',
-                  style: Theme.of(context).textTheme.labelLarge,
+                Expanded(
+                  child: Text(
+                    'Intensidad del tinte',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 12),
                 Text(
                   hasDesign ? '$percentage%' : '—',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
