@@ -149,7 +149,7 @@ class _OpacityControl extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  '$percentage%',
+                  hasDesign ? '$percentage%' : '—',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: AppColors.accent,
                     fontFeatures: const <FontFeature>[
