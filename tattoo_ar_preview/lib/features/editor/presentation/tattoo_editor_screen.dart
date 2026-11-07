@@ -87,6 +87,7 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
       if (mounted) {
         unawaited(_cameraSession.initialize());
         unawaited(_recoverLostImport());
+        unawaited(_captureService.cleanupCache());
       }
     });
   }

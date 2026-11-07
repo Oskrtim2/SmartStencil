@@ -53,6 +53,21 @@ class CaptureService {
   final CaptureGuard _guard = CaptureGuard();
   final CaptureFileNamer _fileNamer = CaptureFileNamer();
 
+  Future<void> cleanupCache() async {
+    try {
+      final Directory temporary = await getTemporaryDirectory();
+      final Directory folder = Directory(
+        '${temporary.path}${Platform.pathSeparator}'
+        '${AppConstants.capturesFolderName}',
+      );
+      if (await folder.exists()) {
+        await _pruneCaptures(folder);
+      }
+    } catch (_) {
+      return;
+    }
+  }
+
   Future<CaptureResult> captureAndShare({
     required CameraController? camera,
     required GlobalKey previewKey,
