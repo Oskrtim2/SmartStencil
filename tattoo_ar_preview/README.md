@@ -155,10 +155,31 @@ test/
 cd tattoo_ar_preview
 flutter test
 dart analyze lib test
+dart format --output=none --set-exit-if-changed lib test
 ```
 
-La suite cubre los límites de escala/traslación, el plegado de rotación, los
-gestos multitáctiles, la geometría de recorte de captura y la firma PNG.
+La suite incluye 52 pruebas y cubre límites de escala/traslación, valores no
+finitos, gestos multitáctiles incrementales, rebase por cambio de viewport,
+geometría de recorte y relaciones de aspecto extremas, validación de firma,
+cabecera y presupuesto de píxeles PNG, transparencia, guardas de concurrencia,
+nombres de archivo, permisos y timeouts de cámara, mensajes de resultado,
+controles de tinta y tamaño base del shader.
+
+El repositorio incluye un workflow de GitHub Actions
+(`.github/workflows/flutter-ci.yml`) que comprueba formato, análisis, pruebas y
+el build del APK debug.
+
+## Endurecimiento
+
+- Timeouts en la inicialización de cámara y en la carga del shader.
+- Recuperación de resultados de galería perdidos por recreación de actividad.
+- Guard de captura para impedir operaciones concurrentes.
+- Verificación de escrituras completas y mensajes específicos de almacenamiento.
+- Limpieza de capturas antiguas al iniciar.
+- Saneamiento de transformaciones no finitas y rebase de gestos.
+- Detección de errores de cámara en tiempo de ejecución.
+- Cierre de la cámara en `inactive`, `hidden`, `paused` y `detached`.
+- Pruebas de parser PNG y límite de memoria para imágenes maliciosas.
 
 ## Privacidad y almacenamiento
 

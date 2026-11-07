@@ -1,5 +1,7 @@
 # SmartStencil
 
+[![Flutter CI](https://github.com/Oskrtim2/SmartStencil/actions/workflows/flutter-ci.yml/badge.svg)](https://github.com/Oskrtim2/SmartStencil/actions/workflows/flutter-ci.yml)
+
 Aplicación Flutter **100 % offline** para probar tatuajes en tiempo real con la
 cámara del dispositivo.
 
