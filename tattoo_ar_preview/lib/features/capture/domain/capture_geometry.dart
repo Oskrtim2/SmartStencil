@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import '../../../core/constants/app_constants.dart';
+
 abstract final class CaptureGeometry {
   static Rect coverSourceRect(Size source, double targetAspect) {
     if (source.isEmpty || targetAspect <= 0 || !targetAspect.isFinite) {
@@ -33,5 +35,17 @@ abstract final class CaptureGeometry {
     }
     final double scale = math.min(1, maxLongSide / longestSide);
     return Size(crop.width * scale, crop.height * scale);
+  }
+
+  static double fallbackPixelRatio(double devicePixelRatio) {
+    if (!devicePixelRatio.isFinite) {
+      return AppConstants.minFallbackCapturePixelRatio;
+    }
+    return devicePixelRatio
+        .clamp(
+          AppConstants.minFallbackCapturePixelRatio,
+          AppConstants.fallbackCapturePixelRatio,
+        )
+        .toDouble();
   }
 }

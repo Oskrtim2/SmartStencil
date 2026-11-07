@@ -17,6 +17,7 @@ abstract final class AppConstants {
   static const int maxCaptureDimension = 4096;
   static const int maxCachedCaptures = 5;
   static const double fallbackCapturePixelRatio = 3;
+  static const double minFallbackCapturePixelRatio = 1.5;
   static const String capturesFolderName = 'smartstencil_captures';
   static const String capturesFilePrefix = 'smartstencil_';
 

@@ -236,7 +236,9 @@ class CaptureService {
       );
     }
 
-    final double pixelRatio = devicePixelRatio.clamp(1.5, 3.5).toDouble();
+    final double pixelRatio = CaptureGeometry.fallbackPixelRatio(
+      devicePixelRatio,
+    );
     ui.Image? image;
     try {
       image = await object.toImage(pixelRatio: pixelRatio);

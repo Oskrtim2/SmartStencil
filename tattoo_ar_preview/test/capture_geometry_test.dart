@@ -49,5 +49,12 @@ void main() {
         Rect.zero,
       );
     });
+
+    test('clamps the fallback pixel ratio to a safe range', () {
+      expect(CaptureGeometry.fallbackPixelRatio(1), 1.5);
+      expect(CaptureGeometry.fallbackPixelRatio(2), 2);
+      expect(CaptureGeometry.fallbackPixelRatio(4), 3);
+      expect(CaptureGeometry.fallbackPixelRatio(double.nan), 1.5);
+    });
   });
 }
