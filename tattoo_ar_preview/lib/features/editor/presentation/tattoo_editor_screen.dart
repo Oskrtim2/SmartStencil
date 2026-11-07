@@ -303,7 +303,6 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
     try {
       final ShareResult result = await _stencilExportService.shareStencil(
         image: design.image,
-        sourceName: design.fileName,
         sharePositionOrigin: origin,
       );
       if (!mounted) {

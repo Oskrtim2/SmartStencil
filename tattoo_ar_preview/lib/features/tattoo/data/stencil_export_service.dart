@@ -19,10 +19,9 @@ class StencilExportService {
 
   Future<ShareResult> shareStencil({
     required ui.Image image,
-    required String sourceName,
     required ui.Rect sharePositionOrigin,
   }) async {
-    final String path = await exportPng(image, sourceName: sourceName);
+    final String path = await exportPng(image);
     try {
       return await _sharePlus.share(
         ShareParams(
@@ -39,7 +38,7 @@ class StencilExportService {
     }
   }
 
-  Future<String> exportPng(ui.Image image, {required String sourceName}) async {
+  Future<String> exportPng(ui.Image image) async {
     try {
       final ByteData? data = await image.toByteData(
         format: ui.ImageByteFormat.png,
@@ -61,11 +60,10 @@ class StencilExportService {
       if (!await folder.exists()) {
         await folder.create(recursive: true);
       }
-      final String safeName = _sanitize(sourceName);
       final File file = File(
         '${folder.path}${Platform.pathSeparator}'
         '${AppConstants.stencilsFilePrefix}'
-        '${DateTime.now().microsecondsSinceEpoch}_$safeName.png',
+        '${DateTime.now().microsecondsSinceEpoch}.png',
       );
       await file.writeAsBytes(bytes, flush: true);
       final int written = await file.length();
@@ -118,16 +116,5 @@ class StencilExportService {
     } catch (_) {
       return;
     }
-  }
-
-  String _sanitize(String value) {
-    final String base = value
-        .replaceAll(RegExp(r'[^a-zA-Z0-9_-]+'), '_')
-        .replaceAll(RegExp(r'_+'), '_')
-        .replaceAll(RegExp(r'^_+|_+$'), '');
-    if (base.isEmpty) {
-      return 'stencil';
-    }
-    return base.length > 40 ? base.substring(0, 40) : base;
   }
 }
