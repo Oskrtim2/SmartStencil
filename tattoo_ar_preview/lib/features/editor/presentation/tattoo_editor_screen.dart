@@ -163,7 +163,11 @@ class _TattooEditorScreenState extends State<TattooEditorScreen>
                 curve: Curves.easeOut,
                 child: IgnorePointer(
                   ignoring: _isCapturing,
-                  child: _buildChrome(),
+                  child: ListenableBuilder(
+                    listenable: _cameraSession,
+                    builder: (BuildContext context, Widget? child) =>
+                        _buildChrome(),
+                  ),
                 ),
               ),
               IgnorePointer(

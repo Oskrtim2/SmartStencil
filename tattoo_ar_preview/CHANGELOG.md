@@ -18,6 +18,8 @@ Todas las modificaciones relevantes de SmartStencil se documentan aquí.
 
 ### Fixed
 
+- Los controles inferiores no se reconstruían cuando la cámara terminaba de
+  inicializarse, dejando la vista previa sin panel de tinta.
 - Zonas muertas del pellizco al alcanzar los límites de escala.
 - Saltos de transformación al añadir o retirar dedos, al terminar un gesto o al
   cambiar el viewport.
